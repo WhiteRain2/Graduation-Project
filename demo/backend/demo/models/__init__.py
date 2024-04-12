@@ -4,4 +4,4 @@ from .student import Student
 from .community import Community
 from .course import Course
 # 明确列出关系模块所有导出的模型
-from .relations import CommunityMember,CommunityCompletedCourse,CommunityWishCourse,CompletedCourse,WishCourse
+from .relations import CommunityCompletedCourse,CommunityWishCourse,CompletedCourse,WishCourse

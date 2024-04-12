@@ -3,7 +3,7 @@ from django.contrib import admin
 from .models.student import Student
 from .models.community import Community
 from .models.course import Course
-from .models.relations import CommunityMember, CommunityCompletedCourse, CommunityWishCourse, CompletedCourse, WishCourse
+from .models.relations import CommunityCompletedCourse, CommunityWishCourse, CompletedCourse, WishCourse
 
 # 自定义学生模型的admin显示
 class StudentAdmin(admin.ModelAdmin):
@@ -44,7 +44,6 @@ admin.site.register(Community, CommunityAdmin)
 admin.site.register(Course, CourseAdmin)
 
 # 针对关系模型保持默认的admin显示
-admin.site.register(CommunityMember)
 admin.site.register(CommunityCompletedCourse)
 admin.site.register(CommunityWishCourse)
 admin.site.register(CompletedCourse)

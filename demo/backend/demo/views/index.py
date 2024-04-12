@@ -3,6 +3,7 @@
 from django.shortcuts import render, redirect
 from django.shortcuts import get_object_or_404
 from demo.models import Student, Course, WishCourse, Community
+from django.http import JsonResponse
 
 
 def update_student_wish_courses(student, wish_course):
@@ -18,7 +19,7 @@ def update_student_wish_courses(student, wish_course):
     return True
 
 
-def get_recommended_communities(student, wish_course):
+def get_recommended_communities(student, wish_course, MAX_COMMUNITIES=10):
     """
     获取推荐的学习共同体列表。这个函数应该由实际的推荐算法逻辑实现。
     现在暂时返回一个空列表，您需要用您的算法逻辑替换它。
@@ -28,13 +29,18 @@ def get_recommended_communities(student, wish_course):
     :return: 推荐的学习共同体列表
     """
     communities = Community.objects.all()
+    recommended_communities = []
     for community in communities:
-        pass
-    return []
+        if student in community.members.all() or community.members.count() >= community.MAX_MEMBERS:
+            continue
+        if len(recommended_communities) >= MAX_COMMUNITIES:
+            break
+        recommended_communities.append(community)
+    return recommended_communities
 
 
 def recommend_communities(request):
-    if request.method == 'POST':
+    if request.method == 'GET':
         student_id = request.POST.get('student_id')
         course_id = request.POST.get('course_id')
 
@@ -48,12 +54,20 @@ def recommend_communities(request):
 
         # 调用推荐算法接口获取推荐的学习共同体
         recommended_communities = get_recommended_communities(student, wish_course)
-
+        community_list = []
+        # 将结果封装为JsonResponse
+        for community in recommended_communities:
+            community_list.append({
+                'id': community.id,
+                'name': community.name,
+                'description': community.description,
+            })
         # 将结果返回给前端
-        return render(request, 'recommendation_results.html', {'communities': recommended_communities})
+        # return render(request, 'recommendation_results.html', {'communities': recommended_communities})
+        return JsonResponse(community_list, safe='False')
 
     return render(request, 'student_form.html')
 
 
 def index(request):
-    return render(request, 'student_form.html')
+    return recommend_communities(request)
