@@ -1,0 +1,17 @@
+<!-- templates/demo/recommendation_results.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Recommendation Results</title>
+</head>
+<body>
+    <h1>Recommended Communities</h1>
+    <ul>
+        {% for community in communities %}
+            <li>Community ID: {{ community.id }}, Members: {{ community.members|join:", " }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
