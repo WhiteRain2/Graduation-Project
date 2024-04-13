@@ -77,8 +77,11 @@ def calculate_and_save_similarities(num_factors=64, num_epochs=10, top_n=10):
             similarities = student_similarity_matrix[i]
             top_indices = similarities.argsort()[-top_n - 1:-1][::-1]  # 跳过自身，然后取TOP N
             top_scores = similarities[top_indices].tolist()
-            # 构造相似度向量为JSON格式
-            similarity_vector = dict(zip(top_indices.tolist(), top_scores))
+            # 将模型内部索引转换为原始student_id
+            original_student_ids = [list(student_index_map.keys())[list(student_index_map.values()).index(idx)] for idx
+                                    in top_indices]
+            # 构造相似度向量为JSON格式，使用原始student_id作为key
+            similarity_vector = dict(zip(original_student_ids, top_scores))
             # 更新或创建记录
             StudentSimilarity.objects.update_or_create(
                 student=student,
@@ -92,12 +95,15 @@ def calculate_and_save_similarities(num_factors=64, num_epochs=10, top_n=10):
             similarities = course_similarity_matrix[i]
             top_indices = similarities.argsort()[-top_n - 1:-1][::-1]  # 跳过自身，然后取TOP N
             top_scores = similarities[top_indices].tolist()
-            # 构造相似度向量为JSON格式
-            similarity_vector = dict(zip(top_indices.tolist(), top_scores))
+            # 将模型内部索引转换为原始course_id
+            original_course_ids = [list(course_index_map.keys())[list(course_index_map.values()).index(idx)] for idx in
+                                   top_indices]
+            # 构造相似度向量为JSON格式，使用原始course_id作为key
+            similarity_vector = dict(zip(original_course_ids, top_scores))
             # 更新或创建记录
             CourseSimilarity.objects.update_or_create(
                 course=course,
                 defaults={'similarity_vector': similarity_vector}
             )
 
-    print('Top N student and course similarities have been saved to the database.')
+    print(f'Top {top_n} student and course similarities have been saved to the database with original indices.')
