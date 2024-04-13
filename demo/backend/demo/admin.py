@@ -4,6 +4,8 @@ from .models.student import Student
 from .models.community import Community
 from .models.course import Course
 from .models.relations import CommunityCompletedCourse, CommunityWishCourse, CompletedCourse, WishCourse
+from .models.similarity import StudentSimilarity, CourseSimilarity
+
 
 # 自定义学生模型的admin显示
 class StudentAdmin(admin.ModelAdmin):
@@ -48,3 +50,5 @@ admin.site.register(CommunityCompletedCourse)
 admin.site.register(CommunityWishCourse)
 admin.site.register(CompletedCourse)
 admin.site.register(WishCourse)
+admin.site.register(StudentSimilarity)
+admin.site.register(CourseSimilarity)

@@ -1,9 +1,10 @@
 # views.py
 
-from django.shortcuts import render, redirect
+import json
 from django.shortcuts import get_object_or_404
 from demo.models import Student, Course, WishCourse, Community
 from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 
 
 def update_student_wish_courses(student, wish_course):
@@ -39,16 +40,18 @@ def get_recommended_communities(student, wish_course, MAX_COMMUNITIES=10):
     return recommended_communities
 
 
+@require_http_methods(['GET', 'POST'])
 def recommend_communities(request):
-    if request.method == 'GET':
-        student_id = request.POST.get('student_id')
-        course_id = request.POST.get('course_id')
+    if request.method == 'POST':
+        data = json.loads(request.body.decode('utf-8'))
+        student_id = data.get('student_id')
+        course_id = data.get('course_id')
 
         student = get_object_or_404(Student, student_id=student_id)
         wish_course = get_object_or_404(Course, course_id=course_id)
 
         if wish_course in student.completed_courses.all():
-            return render(request, '404.html')
+            return JsonResponse({'error': 'Course Completed'}, safe=False)
         # 处理学生愿望课程，更新数据库
         update_student_wish_courses(student, wish_course)
 
@@ -62,11 +65,9 @@ def recommend_communities(request):
                 'name': community.name,
                 'description': community.description,
             })
-        # 将结果返回给前端
-        # return render(request, 'recommendation_results.html', {'communities': recommended_communities})
-        return JsonResponse(community_list, safe='False')
+        return JsonResponse(community_list, safe=False)
 
-    return render(request, 'student_form.html')
+    return JsonResponse({'error': 'Error GET'}, safe=False)
 
 
 def index(request):
