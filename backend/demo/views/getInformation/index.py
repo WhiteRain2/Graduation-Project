@@ -1,14 +1,6 @@
 # views/getInformation/index.py
-from django.shortcuts import get_object_or_404
-from demo.models import Student, CompletedCourse, WishCourse
+from demo.models import CompletedCourse, WishCourse
 from django.http import JsonResponse
-
-
-def getinfo(request, userId):
-    student = get_object_or_404(Student, student_id=userId)
-    if not student:
-        return JsonResponse({'error': 'Student not found'}, safe=False)
-    return get_student_list(student)  # 使用之前定义的 get_student_list 函数
 
 
 def get_student_list(student):

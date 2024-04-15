@@ -1,47 +1,79 @@
 # views/index.py
-
 import json
-from django.shortcuts import get_object_or_404
-from demo.models import Student, Course, WishCourse, Community, CourseSimilarity
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from demo.repositories.course_repository import CourseRepository
+from demo.repositories.student_repository import StudentRepository
+from demo.views.operation.index import student_join_community, student_leave_community
+from demo.views.recommend.index import get_recommended_communities
 from demo.views.getInformation.index import get_student_list
 
-@require_http_methods(['GET', 'POST'])
-def recommend_communities(request):
-    if request.method == 'POST':
-        data = json.loads(request.body.decode('utf-8'))
-        student_id = data.get('student_id')
-        course_id = data.get('course_id')
 
-        student = get_object_or_404(Student, student_id=student_id)
-        wish_course = get_object_or_404(Course, course_id=course_id)
-
-        if wish_course in student.completed_courses.all():
-            return JsonResponse({'error': 'Course Completed'}, safe=False)
-        # 处理学生愿望课程，更新数据库
-        update_student_wish_courses(student, wish_course)
-        print('update student wish course')
-        # 调用推荐算法接口获取推荐的学习共同体
-        recommended_communities = get_recommended_communities(student, wish_course.course_id)
-        print('recommended_communities')
-        community_list = []
-        # 将结果封装为JsonResponse
-        for sim, community in recommended_communities:
-            community_list.append({
-                'id': community.id,
-                'name': community.name,
-                'description': community.description,
-                'similarity': sim,
-            })
-        return JsonResponse(community_list, safe=False)
-
-    return JsonResponse({'error': 'Error GET'}, safe=False)
-
-
-def index(request, userId):
-    student = get_object_or_404(Student, student_id=userId)
+def getinfo(request, user_id):
+    student = StudentRepository.get_student_by_id(user_id)
     if not student:
         return JsonResponse({'error': 'Student not found'}, safe=False)
     return get_student_list(student)  # 使用之前定义的 get_student_list 函数
 
+
+@require_http_methods(['GET', 'POST'])
+def recommend_communities(request):
+    if not request.method == 'POST':
+        return JsonResponse({'error': 'Method Not Allowed'}, status=405, safe=False)
+
+    data = json.loads(request.body.decode('utf-8'))
+    student_id = data.get('student_id')
+    course_id = data.get('course_id')
+
+    # 使用StudentRepository和CourseRepository获取学生和课程实例
+    try:
+        wish_course = CourseRepository.get_course_by_id(course_id)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, safe=False)
+    # 更新学生愿望课程
+    try:
+        StudentRepository.add_wish_course(student_id, course_id)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, safe=False)
+
+    # 获取推荐的学习共同体
+    recommended_communities = get_recommended_communities(student_id, wish_course.course_id)
+
+    # 构造返回结果
+    community_list = [
+        {
+            'id': community.id,
+            'name': community.name,
+            'description': community.description,
+            'similarity': sim,
+        } for sim, community in recommended_communities
+    ]
+    return JsonResponse(community_list, safe=False)
+
+
+@require_http_methods(['GET', 'POST'])
+def operation(request):
+    data = json.loads(request.body.decode('utf-8'))
+    opera = data.get('operation')
+    student_id = data.get('student_id')
+    community_id = data.get('community_id')
+
+    # 检查是否提供了必要的参数
+    if not all([opera, student_id, community_id]):
+        return JsonResponse({'error': 'Missing required parameters.'}, status=400)
+
+    # 根据 operation 触发对应的操作
+    if opera == 'join':
+        try:
+            student_join_community(student_id, community_id)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    elif opera == 'leave':
+        try:
+            student_leave_community(student_id, community_id)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    else:
+        return JsonResponse({'error': 'Invalid operation.'}, status=400)
+
+    return JsonResponse({'message': 'Operation completed successfully.'})

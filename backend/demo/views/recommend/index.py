@@ -1,37 +1,17 @@
 # views/recommend/index.py
 
-import json
-from django.shortcuts import get_object_or_404
-from demo.models import Student, Course, WishCourse, Community, CourseSimilarity
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-from django.db.models import Count
-
-
-def update_student_wish_courses(student, wish_course):
-    if wish_course in student.wish_courses.all():
-        return False
-    if student.wish_courses.count() < Student.MAX_WISH_COURSES:
-        # 将课程添加到学生的愿望课程中
-        WishCourse.objects.create(student=student, course=wish_course)
-    else:
-        # 如果愿望课程已满，则替换最旧的愿望课程
-        oldest_wish_course = student.wish_courses.order_by('wishcourse__timestamp').first()
-        WishCourse.objects.filter(student=student, course=oldest_wish_course).delete()
-        WishCourse.objects.create(student=student, course=wish_course)
-    return True
+from demo.models import CourseSimilarity
+from demo.repositories.community_repository import CommunityRepository
+from demo.repositories.student_repository import StudentRepository
 
 
 def get_courses_similarity(course_similarity_qs, course_a_ids, course_b_ids):
     # 如果两个列表中的课程ID完全相同，则直接返回1
     if set(course_a_ids) == set(course_b_ids):
-        print('a == b')
         return 1
     if len(course_a_ids) == 1 and course_a_ids[0] in course_b_ids:
-        print('a << b')
         return 1
     if len(course_b_ids) == 1 and course_b_ids[0] in course_a_ids:
-        print('b << a')
         return 1
 
     total_similarity = 0
@@ -89,26 +69,12 @@ def evaluate_member_similarity(community, student, current_wish_course_id, cours
     return final_similarity_score
 
 
-def get_recommended_communities(student, current_wish_course_id, MAX_COMMUNITIES=10):
-    """
-    获取推荐的学习共同体列表。这个函数基于学生的当前愿望课程与共同体的匹配程度进行推荐，
-    返回相似度最高的MAX_COMMUNITIES个共同体。
+def get_recommended_communities(student_id, current_wish_course_id, MAX_COMMUNITIES=10):
+    student = StudentRepository.get_student_by_id(student_id)
+    # 调用CommunityRepository中的方法获取推荐共同体
+    communities = CommunityRepository.get_eligible_communities_for_recommendation(student_id)
 
-    :param student: 学生对象
-    :param current_wish_course_id: 愿望课程对象id
-    :param MAX_COMMUNITIES: 最大推荐数目
-    :return: 推荐的学习共同体列表
-    """
-    # 获得共同体成员少于 MAX_MEMBERS 的共同体，排除学生当前已加入的
-    communities = Community.objects.annotate(
-        member_count=Count('members')
-    ).filter(
-        member_count__lt=Community.MAX_MEMBERS
-    ).exclude(
-        members__student_id=student.student_id
-    )
-
-    # 预加载共同体的愿望课程和完成课程以及课程相似度
+    # 相似度查询保持不变
     course_similarity_qs = CourseSimilarity.objects.select_related('course').only('course__course_id',
                                                                                   'similarity_vector')
 
@@ -126,36 +92,3 @@ def get_recommended_communities(student, current_wish_course_id, MAX_COMMUNITIES
 
     recommended_communities.sort(key=lambda x: x[0], reverse=True)
     return recommended_communities
-
-
-@require_http_methods(['GET', 'POST'])
-def recommend_communities(request):
-    if request.method == 'POST':
-        data = json.loads(request.body.decode('utf-8'))
-        student_id = data.get('student_id')
-        course_id = data.get('course_id')
-
-        student = get_object_or_404(Student, student_id=student_id)
-        wish_course = get_object_or_404(Course, course_id=course_id)
-
-        if wish_course in student.completed_courses.all():
-            return JsonResponse({'error': 'Course Completed'}, safe=False)
-        # 处理学生愿望课程，更新数据库
-        update_student_wish_courses(student, wish_course)
-        print('update student wish course')
-        # 调用推荐算法接口获取推荐的学习共同体
-        recommended_communities = get_recommended_communities(student, wish_course.course_id)
-        print('recommended_communities')
-        community_list = []
-        # 将结果封装为JsonResponse
-        for sim, community in recommended_communities:
-            community_list.append({
-                'id': community.id,
-                'name': community.name,
-                'description': community.description,
-                'similarity': sim,
-            })
-        return JsonResponse(community_list, safe=False)
-
-    return JsonResponse({'error': 'Error GET'}, safe=False)
-

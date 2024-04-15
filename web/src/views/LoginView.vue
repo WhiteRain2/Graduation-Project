@@ -34,8 +34,6 @@ export default {
       try {
         // 使用学生ID进行登录，并等待返回结果
         await store.dispatch("user/fetchUser", studentId.value);
-        // 调试输出以确认登录状态
-        console.log(store.state.user.is_login);
         // 验证用户是否已经登录
         if (store.state.user.is_login) {
           localStorage.setItem('studentId', studentId.value);

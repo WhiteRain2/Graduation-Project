@@ -55,11 +55,11 @@ MIDDLEWARE = [
 # CORS configuration
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOWED_ORIGINS = [
-    'http://192.168.0.101:9090',  # The origin of your frontend server.
+    'http://localhost:9090',  # The origin of your frontend server.
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://192.168.0.101:9090',  # The origin (scheme and domain) of the requester.
+    'http://localhost:9090',  # The origin (scheme and domain) of the requester.
 ]
 
 # Consider using a custom implementation to retrieve the CSRF token from your frontend

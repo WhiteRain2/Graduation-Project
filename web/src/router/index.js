@@ -1,39 +1,39 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue';
-import UserListView from '../views/UserListView';
+import CommunityListView from '../views/CommunityListView';
 import UserProfileView from '../views/UserProfileView';
 import LoginView from '../views/LoginView';
 import NotFoundView from '../views/NotFoundView';
 
 const routes = [
   {
-    path: '/myspace/',
+    path: '/',
     name: 'home',
     component: HomeView
   },
   {
-    path: '/myspace/userlist/',
-    name: 'userlist',
-    component: UserListView
+    path: '/communitylist/',
+    name: 'communitylist',
+    component: CommunityListView
   },
   {
-    path: '/myspace/userprofile/:userId/',
+    path: '/userprofile/:userId/',
     name: 'userprofile',
     component: UserProfileView
   },
   {
-    path: '/myspace/login/',
+    path: '/login/',
     name: 'login',
     component: LoginView
   },
   {
-    path: '/myspace/404/',
+    path: '/404/',
     name: '404',
     component: NotFoundView
   },
   {
-    path: '/myspace/:catchAll(.*)',
-    redirect: "/myspace/404/"
+    path: '/:catchAll(.*)',
+    redirect: "/404/"
   }
 ]
 
