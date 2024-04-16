@@ -91,9 +91,17 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'learning_community',
+        'USER': 'ms',
+        'PASSWORD': '123456',
+        'HOST': '113.45.166.63',  # 或域名
+        'PORT': '3306',
     }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': BASE_DIR / 'db.sqlite3',
+    # }
 }
 
 # Password validation
@@ -138,7 +146,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CELERY configuration
 CELERY_BROKER_URL = 'redis://localhost:6379/0'  # 示例使用Redis
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # 如果你需要存储任务的结果
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # 存储任务的结果
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
