@@ -1,9 +1,5 @@
 # models/community.py
 from django.db import models
-from .student import Student
-from .course import Course
-from .relations import CommunityCompletedCourse, CommunityWishCourse
-from .similarity import CourseSimilarity
 
 
 class Community(models.Model):

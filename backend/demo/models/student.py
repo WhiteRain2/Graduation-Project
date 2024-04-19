@@ -3,7 +3,7 @@ from django.db import models
 
 
 class Student(models.Model):
-    student_id = models.IntegerField(primary_key=True)
+    student_id = models.IntegerField(primary_key=True)  # 外部系统主键，可能不连续
     name = models.CharField(max_length=200)
     MAX_WISH_COURSES = 5
 

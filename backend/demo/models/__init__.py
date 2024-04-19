@@ -5,3 +5,4 @@ from .community import Community
 from .course import Course
 from .relations import CommunityCompletedCourse, CommunityWishCourse, CompletedCourse, WishCourse
 from .similarity import StudentSimilarity, CourseSimilarity
+from .student_profile import StudentProfile

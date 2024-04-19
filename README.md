@@ -1,4 +1,4 @@
-## API Document
+# API Document
 
 #### **API 1: 获取学生信息**
 
@@ -96,7 +96,7 @@
 - API 2 和 API 3 使用POST方法，需要在请求体中传递JSON格式的参数。
 - 当发生错误时，API会返回包含 `error` 键的JSON对象，并且可能包含不同的HTTP状态代码，根据错误类型而异。
 
-## Log
+# Log
 
 #### 2024-4-16
 
