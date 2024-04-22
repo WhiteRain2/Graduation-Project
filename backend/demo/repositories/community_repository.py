@@ -1,7 +1,8 @@
 # demo/repositories/community_repository.py
 from django.core.exceptions import ValidationError
 from django.db.models import Count
-from demo.models import Student, Community, Course, CompletedCourse, WishCourse, CommunityCompletedCourse, CommunityWishCourse
+from demo.models import Student, Community, Course, CompletedCourse, WishCourse, CommunityCompletedCourse, \
+    CommunityWishCourse, CourseSimilarity
 from django.db import transaction
 
 
@@ -132,17 +133,31 @@ class CommunityRepository:
         community.wish_courses.remove(Course.objects.get(pk=course_id))
 
     @staticmethod
-    def get_eligible_communities_for_recommendation(student_id, max_members=Community.MAX_MEMBERS):
+    def get_eligible_communities_for_recommendation(student_id, current_wish_course_id,
+                                                    max_members=Community.MAX_MEMBERS):
         """
-        获取符合条件的共同体，即学生未加入且成员数小于MAX_MEMBERS的共同体。
+        获取符合条件的共同体，即学生未加入、成员数小于MAX_MEMBERS，并且有学生愿望课程相似课程的共同体。
         :param student_id: 学生的唯一标识符
+        :param current_wish_course_id: 学生当前愿望课程的课程ID
         :param max_members: 共同体允许的最大成员数
         :return: QuerySet, 符合条件的共同体列表
         """
-        return Community.objects.annotate(
+        # 获取当前愿望课程的相似课程ID列表
+        similar_course_ids = [k for k, v in
+                              CourseSimilarity.objects.get(course_id=current_wish_course_id).similarity_vector.items()
+                              if float(v) > 0]
+
+        # 增加当前愿望课程ID到相似课程ID列表
+        similar_course_ids.append(current_wish_course_id)
+
+        # 获取符合条件的共同体列表
+        eligible_communities = Community.objects.annotate(
             member_count=Count('members')
         ).filter(
-            member_count__lt=max_members
+            member_count__lt=max_members,
+            completed_courses__course_id__in=similar_course_ids
         ).exclude(
             members__student_id=student_id
-        )
+        ).distinct()
+
+        return eligible_communities

@@ -37,7 +37,8 @@ def recommend_communities(request):
         return JsonResponse({'error': str(e)}, safe=False)
 
     # 获取推荐的学习共同体
-    recommended_communities = get_recommended_communities(student_id, wish_course.course_id)
+    recommended_communities = get_recommended_communities(student_id, wish_course.course_id,
+                                                          MAX_COMMUNITIES=10)
 
     # 构造返回结果
     community_list = [
