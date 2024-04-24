@@ -4,16 +4,28 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from demo.repositories.course_repository import CourseRepository
 from demo.repositories.student_repository import StudentRepository
+from demo.repositories.community_repository import CommunityRepository
 from demo.views.operation.index import student_join_community, student_leave_community
 from demo.views.recommend.index import get_recommended_communities
-from demo.views.getInformation.index import get_student_list
+from demo.views.getInformation.index import get_student_list, get_community_list
 
 
-def getinfo(request, user_id):
-    student = StudentRepository.get_student_by_id(user_id)
-    if not student:
-        return JsonResponse({'error': 'Student not found'}, safe=False)
-    return get_student_list(student)  # 使用之前定义的 get_student_list 函数
+def getinfo(request):
+    data = json.loads(request.body.decode('utf-8'))
+    who = data.get('type')
+    ID = data.get('id')
+    if who == 'community':
+        community = CommunityRepository.get_community_by_id(ID)
+        if not community:
+            return JsonResponse({'error': 'community not found'}, status=404, safe=False)
+        return get_community_list(community)
+    elif who == 'student':
+        student = StudentRepository.get_student_by_id(ID)
+        if not student:
+            return JsonResponse({'error': 'Student not found'}, status=404, safe=False)
+        return get_student_list(student)  # 使用之前定义的 get_student_list 函数
+    else:
+        return JsonResponse({'error': 'Wrong type'}, safe=False)
 
 
 @require_http_methods(['GET', 'POST'])
@@ -37,8 +49,7 @@ def recommend_communities(request):
         return JsonResponse({'error': str(e)}, safe=False)
 
     # 获取推荐的学习共同体
-    recommended_communities = get_recommended_communities(student_id, wish_course.course_id,
-                                                          MAX_COMMUNITIES=10)
+    recommended_communities = get_recommended_communities(student_id, wish_course.course_id)
 
     # 构造返回结果
     community_list = [
@@ -54,6 +65,9 @@ def recommend_communities(request):
 
 @require_http_methods(['GET', 'POST'])
 def operation(request):
+    if not request.method == 'POST':
+        return JsonResponse({'error': 'Method Not Allowed'}, status=405, safe=False)
+
     data = json.loads(request.body.decode('utf-8'))
     opera = data.get('operation')
     student_id = data.get('student_id')

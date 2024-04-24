@@ -66,15 +66,14 @@ def evaluate_member_similarity(community, student, current_wish_course_id, cours
     return final_similarity_score
 
 
-def get_recommended_communities(student_id, current_wish_course_id, MAX_COMMUNITIES=10, testing=False, max_workers=4):
+def get_recommended_communities(student_id, current_wish_course_id, max_communities=10, max_workers=4):
     student = StudentRepository.get_student_by_id(student_id)
-    communities = (CommunityRepository.get_eligible_communities_for_recommendation(student_id, current_wish_course_id)
-    .prefetch_related(
-        Prefetch('completed_courses'),
-        Prefetch('wish_courses')
+    communities = (CommunityRepository.
+        get_eligible_communities_for_recommendation(student_id, current_wish_course_id)
+        .prefetch_related(
+            Prefetch('completed_courses'),
+            Prefetch('wish_courses')
     ))
-    if testing:
-        return [(0, community) for community in communities[:MAX_COMMUNITIES]]
 
     course_similarity_data = load_course_similarities()
     # 设置准入阈值
@@ -96,6 +95,6 @@ def get_recommended_communities(student_id, current_wish_course_id, MAX_COMMUNIT
                 print(f'Community {community.id} generated an exception: {exc}')
 
     recommended_communities.sort(key=lambda x: x[0], reverse=True)
-    recommended_communities = recommended_communities[:MAX_COMMUNITIES]
+    recommended_communities = recommended_communities[:max_communities]
 
     return recommended_communities
