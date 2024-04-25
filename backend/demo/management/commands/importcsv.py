@@ -22,10 +22,14 @@ class Command(BaseCommand):
 
                 for row in reader:
                     student_id = int(row['userId'])
-                    learning_style = learning_style_mapping[row['LearningStyle']]
-                    activity_level = float(row['ActivityLevel'])
+                    learning_style = learning_style_mapping.get(row['LearningStyle'], 0)
+                    # 在转换前检查ActivityLevel是否为空或非数值
+                    activity_level_str = row['ActivityLevel']
+                    try:
+                        activity_level = float(activity_level_str)
+                    except ValueError:  # 如果无法转换为浮点数，使用默认值0.5
+                        activity_level = 0.5
 
-                    # 查找学生，如果存在则更新，不存在则统计
                     try:
                         student = Student.objects.get(student_id=student_id)
                         student.learning_style = learning_style
@@ -38,7 +42,10 @@ class Command(BaseCommand):
 
             # 遍历所有学生对象，随机赋值性别属性
             self.stdout.write("Randomizing gender of all students...")
-            Student.objects.all().update(gender=random.choice([0, 1]))
+            for student in Student.objects.all():
+                student.gender = random.choice([0, 1])
+                student.save()
+
             self.stdout.write(self.style.SUCCESS("Successfully randomized genders."))
 
             # 遍历所有共同体对象，执行update_all_attributes方法
