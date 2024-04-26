@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -53,15 +54,15 @@ MIDDLEWARE = [
 ]
 
 # CORS configuration
-CORS_ORIGIN_ALLOW_ALL = False
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:9090',  # The origin of your frontend server.
-]
+CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ALLOWED_ORIGINS = [
+#     'http://localhost:9090',  # The origin of your frontend server.
+# ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:9090',  # The origin (scheme and domain) of the requester.
+    'http://*',
+    'https://*',
 ]
-
 # Consider using a custom implementation to retrieve the CSRF token from your frontend
 # and use it in the 'X-CSRFToken' header in your POST requests.
 
@@ -136,6 +137,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
+STATIC_ROOT = '/static'
 STATIC_URL = 'static/'
 
 # Default primary key field type
@@ -143,11 +145,14 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-# CELERY configuration
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # 示例使用Redis
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # 存储任务的结果
-CELERY_ACCEPT_CONTENT = ['application/json']
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://113.45.166.63:6379/1'
+CELERY_RESULT_BACKEND = 'redis://113.45.166.63:6379/2'
+CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Shanghai'
+CELERY_BEAT_SCHEDULE = {
+    'calculate-similarities-everyday': {
+        'task': 'demo.tasks.calculate_similarities_task',
+        'schedule': crontab(hour='14', minute='55'),
+    },
+}

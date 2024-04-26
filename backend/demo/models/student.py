@@ -20,7 +20,7 @@ class Student(models.Model):
     name = models.CharField(max_length=200)
     gender = models.IntegerField(choices=GENDER_CHOICES, default=0)  # 性别字段
     learning_style = models.IntegerField(choices=LEARNING_STYLE_CHOICES, default=0)  # 学习风格字段
-    activity_level = models.FloatField(default=0.0, validators=[MaxValueValidator(1), MinValueValidator(0)])  # 活跃度字段
+    activity_level = models.FloatField(default=0.5, validators=[MaxValueValidator(1), MinValueValidator(0)])  # 活跃度字段
     self_description = models.TextField(null=True, blank=True)  # 自我描述字段
 
     MAX_WISH_COURSES = 5

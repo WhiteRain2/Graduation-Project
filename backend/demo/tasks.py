@@ -1,8 +1,12 @@
 # demo/tasks.py
 from celery import shared_task
-from .ml_utils.calculation import calculate_and_save_similarities
+from .ml_utils.recommender_system import RecommenderSystem
+import logging
 
+logger = logging.getLogger(__name__)
 
 @shared_task
 def calculate_similarities_task():
-    calculate_and_save_similarities(num_factors=64, num_epochs=10, top_n=10)
+    logger.info('Hello World!')
+    # recommender = RecommenderSystem(num_factors=64, num_epochs=10, top_n=10)
+    # recommender.calculate()
