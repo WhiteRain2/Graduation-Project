@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 import torch.nn.functional as F
 from django.db import transaction
@@ -86,19 +85,20 @@ class RecommenderSystem:
         return model
 
     def compute_similarity_matrices(self, model):
-        student_similarity_matrix = RecommenderSystem.compute_cosine_similarity(model.user_factors.weight.data).cpu()
-        course_similarity_matrix = RecommenderSystem.compute_cosine_similarity(model.item_factors.weight.data).cpu()
+        # 计算基于学习成果的相似性
+        student_similarity_matrix = RecommenderSystem.compute_cosine_similarity(model.user_factors.weight.data)
+        course_similarity_matrix = RecommenderSystem.compute_cosine_similarity(model.item_factors.weight.data)
 
-        # Initialize personal similarity matrix and compute values
-        personal_similarity_matrix = np.zeros((len(self.students), len(self.students)))
+        # 直接更新学生相似性矩阵的值，而不创建个人相似性矩阵和融合矩阵
         for i, student1 in enumerate(self.students):
             for j, student2 in enumerate(self.students):
                 if i != j:
-                    personal_similarity_matrix[i][j] = RecommenderSystem.calculate_personal_similarity(student1,
-                                                                                                       student2)
+                    # 计算基于个人信息的相似性
+                    personal_similarity = RecommenderSystem.calculate_personal_similarity(student1, student2)
+                    # 更新学生相似性矩阵的值
+                    student_similarity_matrix[i][j] = (student_similarity_matrix[i][j] + personal_similarity) / 2
 
-        combined_similarity_matrix = (student_similarity_matrix + personal_similarity_matrix) / 2
-        return combined_similarity_matrix, course_similarity_matrix
+        return student_similarity_matrix, course_similarity_matrix
 
     def save_similarities(self, combined_student_similarity_matrix, course_similarity_matrix):
         with transaction.atomic():
