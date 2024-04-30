@@ -7,11 +7,35 @@ from demo.repositories.community_repository import CommunityRepository
 
 class StudentRepository:
     @staticmethod
+    def create_student(student_id, name):
+        """
+        创建新的学生记录。
+        :param student_id: 学生的唯一标识符
+        :param name: 学生的姓名
+        """
+        if Student.objects.filter(student_id=student_id).exists():
+            raise ValidationError(f"Student with id {student_id} already exists.")
+
+        # 创建 Student 实例并保存到数据库
+        student = Student(student_id=student_id, name=name)
+        student.save()
+        return student
+
+    @staticmethod
     def get_student_by_id(student_id):
         """
         根据 ID 获取学生记录。
         """
         return Student.objects.get(pk=student_id)
+
+    @staticmethod
+    def get_student_by_name(name):
+        """
+        根据用户名获取记录
+        :param name:
+        :return:
+        """
+        return Student.objects.get(name=name)
 
     @staticmethod
     def join_community(student_id, community_id):

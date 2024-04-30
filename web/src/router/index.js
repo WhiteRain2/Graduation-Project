@@ -1,41 +1,56 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue';
-import CommunityListView from '../views/CommunityListView';
-import UserProfileView from '../views/UserProfileView';
+import UserListView from '../views/UserListView';
 import LoginView from '../views/LoginView';
+import RegisterView from '../views/RegisterView';
+import UserProfileView from '@/views/UserProfileView.vue';
 import NotFoundView from '../views/NotFoundView';
+import store from '@/store';
 
 const routes = [
   {
     path: '/',
     name: 'home',
-    component: HomeView
+    component: HomeView,
+    meta: { requiresAuth: true } // 需要登录权限
   },
   {
-    path: '/communitylist/',
-    name: 'communitylist',
-    component: CommunityListView
-  },
-  {
-    path: '/userprofile/:userId/',
-    name: 'userprofile',
-    component: UserProfileView
+    path: '/userlist/',
+    name: 'userlist',
+    component: UserListView,
+    meta: { requiresAuth: true } // 需要登录权限
   },
   {
     path: '/login/',
     name: 'login',
-    component: LoginView
+    component: LoginView,
+    meta: { requiresAuth: false } // 不需要登录权限
+  },
+  {
+    path: '/register/',
+    name: 'register',
+    component: RegisterView,
+    meta: { requiresAuth: false } // 不需要登录权限
+  },
+  {
+    path:'/userprofile/',
+    name:'userprofile',
+    component:UserProfileView,
+    meta: { requiresAuth: true }
+
   },
   {
     path: '/404/',
     name: '404',
-    component: NotFoundView
+    component: NotFoundView,
+    meta: { requiresAuth: false } // 不需要登录权限
   },
   {
     path: '/:catchAll(.*)',
-    redirect: "/404/"
+    redirect: "/myspace/404/",
+    meta: { requiresAuth: false } // 不需要登录权限
   }
-]
+];
 
 const router = createRouter({
   history: createWebHistory(),
@@ -43,12 +58,10 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  // 从localStorage而不是store获取登录状态
-  const isLoggedIn = localStorage.getItem('isUserLoggedIn');
-  const isGoingToLogin = to.name === 'login';
-
-  // 如果用户未登录并且不是正在访问登录页面，则重定向到登录页
-  if (!isLoggedIn && !isGoingToLogin) {
+  const isLoggedIn = store.state.user.is_login;
+  
+  if (to.meta.requiresAuth && !isLoggedIn) {
+    // 如果访问的路由需要授权但用户未登录，重定向到登录页
     next({ name: 'login' });
   } else {
     // 否则，继续当前的导航

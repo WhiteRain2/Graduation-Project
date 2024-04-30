@@ -1,3 +1,5 @@
+// store/index.js
+
 import { createStore } from 'vuex'
 import ModuleUser from './user';
 

@@ -146,7 +146,7 @@ export default {
         alert('请输入课程ID或名称!');
         return;
       }
-
+      console.log(store.state.user)
       store.commit('user/updateIsrecommending', true);
       try {
         // 直接调用store的dispatch函数来触发一个action

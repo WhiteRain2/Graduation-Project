@@ -11,22 +11,22 @@
           <router-link class="nav-link" :to="{name: 'home'}">首页</router-link>
         </li>
         <li class="nav-item">
-          <router-link class="nav-link" :to="{name: 'communitylist'}">我的小组</router-link>
+          <router-link class="nav-link" :to="{name: 'userlist'}">已加入社区列表</router-link>
+        </li>
+        <li class="nav-item">
+          <router-link class="nav-link"  :to="{name:'userprofile'}">社区聊天室</router-link>
         </li>
       </ul>
       <ul class="navbar-nav" v-if="!$store.state.user.is_login">
         <li class="nav-item">
           <router-link class="nav-link" :to="{name: 'login'}">登录</router-link>
         </li>
+        <li class="nav-item">
+          <router-link class="nav-link" :to="{name: 'register'}">注册</router-link>
+        </li>
       </ul>
       <ul class="navbar-nav" v-else>
         <li class="nav-item">
-          <router-link
-            class="nav-link" 
-            :to="{name: 'userprofile', params: {userId: $store.state.user.id}}"
-          >
-            Hi, {{ $store.state.user.name }}
-          </router-link>
         </li>
         <li class="nav-item">
           <a class="nav-link" style="cursor: pointer" @click="logout">退出</a>

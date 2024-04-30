@@ -1,34 +1,21 @@
 # views/index.py
 import json
+
+from django.contrib.auth.models import User
+from django.db import transaction
 from django.http import JsonResponse
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods
+
+from demo.models import Student, StudentProfile
 from demo.repositories.course_repository import CourseRepository
 from demo.repositories.student_repository import StudentRepository
 from demo.repositories.community_repository import CommunityRepository
 from demo.views.operation.index import student_join_community, student_leave_community
 from demo.views.recommend.index import get_recommended_communities
-from demo.views.getInformation.index import get_student_list, get_community_list
 
 
-def getinfo(request):
-    data = json.loads(request.body.decode('utf-8'))
-    who = data.get('type')
-    ID = data.get('id')
-    if who == 'community':
-        community = CommunityRepository.get_community_by_id(ID)
-        if not community:
-            return JsonResponse({'error': 'community not found'}, status=404, safe=False)
-        return get_community_list(community)
-    elif who == 'student':
-        student = StudentRepository.get_student_by_id(ID)
-        if not student:
-            return JsonResponse({'error': 'Student not found'}, status=404, safe=False)
-        return get_student_list(student)  # 使用之前定义的 get_student_list 函数
-    else:
-        return JsonResponse({'error': 'Wrong type'}, safe=False)
-
-
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(['POST'])
 def recommend_communities(request):
     if not request.method == 'POST':
         return JsonResponse({'error': 'Method Not Allowed'}, status=405, safe=False)
@@ -63,7 +50,7 @@ def recommend_communities(request):
     return JsonResponse(community_list, safe=False)
 
 
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(['POST'])
 def operation(request):
     if not request.method == 'POST':
         return JsonResponse({'error': 'Method Not Allowed'}, status=405, safe=False)
@@ -92,3 +79,36 @@ def operation(request):
         return JsonResponse({'error': 'Invalid operation.'}, status=400)
 
     return JsonResponse({'message': 'Operation completed successfully.'})
+
+
+@require_http_methods(['POST'])
+@transaction.atomic
+def regis(request):
+    data = json.loads(request.body.decode('utf-8'))
+    username = data.get("username")
+    password = data.get("password")
+    email = data.get("email")
+
+    if not all([username, password, email]):
+        return JsonResponse(
+            {"error": "用户名，密码和邮箱都是必需的。"},
+            status=400
+        )
+
+    if User.objects.filter(username=username).exists():
+        return JsonResponse(
+            {"error": "用户名已存在。"},
+            status=400
+        )
+
+    user = User.objects.create_user(username=username, email=email, password=password)
+    user.save()
+
+    # 使用当前时间戳作为学生 ID
+    student_id = int(timezone.now().timestamp())
+    student = StudentRepository.create_student(student_id, username)
+
+    student_profile = StudentProfile(user=user, student=student)
+    student_profile.save()
+
+    return JsonResponse({"success": "用户注册成功。"}, status=201)

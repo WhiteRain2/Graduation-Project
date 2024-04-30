@@ -1,4 +1,5 @@
 # views/recommend/index.py
+import json
 
 from django.db.models import Prefetch
 from demo.models import CourseSimilarity, Student, Community
@@ -33,7 +34,7 @@ def get_courses_similarity(course_similarity_data, course_a_ids, course_b_ids):
             else:
                 # 使用预加载的相似度数据代替数据库查询
                 similarity_vector = course_similarity_data.get(course_a_id, {})
-                similarity = similarity_vector.get(str(course_b_id), 0)
+                similarity = json.loads(similarity_vector).get(str(course_b_id), 0)
                 total_similarity += similarity
                 # 仅在存在实际相似度数据时增加比较次数
                 if similarity > 0:

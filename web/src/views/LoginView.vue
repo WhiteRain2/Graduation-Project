@@ -4,10 +4,15 @@
       <div class="col-3">
         <form @submit.prevent="login">
           <div class="mb-3">
-            <input v-model="studentId" type="text" class="form-control" id="studentId" placeholder="请输入学生ID">
+            <label for="username" class="form-label">用户名</label>
+            <input v-model="username" type="text" class="form-control" id="username" required>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">密码</label>
+            <input v-model="password" type="password" class="form-control" id="password" required>
           </div>
           <div class="error-message">{{ errorMessage }}</div>
-          <button type="submit" class="btn btn-primary">进入</button>
+          <button type="submit" class="btn btn-primary" :disabled="isLoggingIn">登录</button>
         </form>
       </div>
     </div>
@@ -15,9 +20,10 @@
 </template>
 
 <script>
-import ContentBase from '../components/ContentBase';
+import ContentBase from '../components/ContentBase'
 import { ref } from 'vue';
 import { useStore } from 'vuex';
+import router from '@/router/index';
 
 export default {
   name: 'LoginView',
@@ -26,34 +32,33 @@ export default {
   },
   setup() {
     const store = useStore();
-    const studentId = ref('');
+    const username = ref('');
+    const password = ref('');
     const errorMessage = ref('');
+    const isLoggingIn = ref(false); // 新增，用于表示正在登录
 
     const login = async () => {
       errorMessage.value = "";
+      isLoggingIn.value = true;
       try {
-        // 使用学生ID进行登录，并等待返回结果
-        await store.dispatch("user/fetchUser", studentId.value);
-        // 验证用户是否已经登录
-        if (store.state.user.is_login) {
-          localStorage.setItem('studentId', studentId.value);
-          localStorage.setItem('isUserLoggedIn', 'true');
-          console.log(localStorage);
-          window.location.reload(); // 强制页面刷新
-        } else {
-          // 如果没有返回有效的用户数据，设置错误消息
-          errorMessage.value = "无效的学生ID";
-        }
+        await store.dispatch("user/login", {
+          username: username.value,
+          password: password.value,
+        });
+        router.push({name: 'home'});
       } catch (error) {
-        // 可能是网络错误或后端错误，因此设置通用的登录失败消息
-        errorMessage.value = "登录失败，请重试";
+        errorMessage.value = error.message;
+      } finally {
+        isLoggingIn.value = false;
       }
     };
 
     return {
-      studentId,
+      username,
+      password,
       errorMessage,
       login,
+      isLoggingIn,
     }
   }
 }
@@ -66,5 +71,6 @@ button {
 
 .error-message {
   color: red;
+  margin-top: 0.5rem;
 }
 </style>

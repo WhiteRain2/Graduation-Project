@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 from celery.schedules import crontab
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,15 +33,45 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.0.101', '120.26.228.25']
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'demo',
     'corsheaders',  # Ensure corsheaders is added to the installed apps.
 ]
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('113.45.166.63', 6379)],
+        },
+    },
+}
+
+REST_FRAMEWORK = {
+    # ...
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    # ...
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # 访问令牌的有效时长
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # 刷新令牌的有效时长
+    'ROTATE_REFRESH_TOKENS': False,                   # 是否每次刷新令牌时都发新令牌
+    'BLACKLIST_AFTER_ROTATION': True,                 # 旋转令牌后是否加入黑名单
+
+    # 可能还有其他设置，根据你的需要进行配置
+}
+
+ASGI_APPLICATION = 'backend.asgi.application'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -153,6 +184,6 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_BEAT_SCHEDULE = {
     'calculate-similarities-everyday': {
         'task': 'demo.tasks.calculate_similarities_task',
-        'schedule': crontab(hour='19', minute='30'),
+        'schedule': crontab(hour='00', minute='00'),
     },
 }

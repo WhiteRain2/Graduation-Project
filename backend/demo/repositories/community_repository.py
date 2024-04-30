@@ -1,4 +1,6 @@
 # demo/repositories/community_repository.py
+import json
+
 from django.core.exceptions import ValidationError
 from django.db.models import Count
 from demo.models import Student, Community, CourseSimilarity
@@ -60,10 +62,14 @@ class CommunityRepository:
         :param max_members: 共同体允许的最大成员数
         :return: QuerySet, 符合条件的共同体列表
         """
-        # 获取当前愿望课程的相似课程ID列表
-        similar_course_ids = [k for k, v in
-                              CourseSimilarity.objects.get(course_id=current_wish_course_id).similarity_vector.items()
-                              if float(v) > 0]
+        # 先得到相似度的JSON字符串
+        similarity_vector_str = CourseSimilarity.objects.get(course_id=current_wish_course_id).similarity_vector
+
+        # 将JSON字符串解析为字典
+        similarity_vector_dict = json.loads(similarity_vector_str)
+
+        # 筛选出相似度大于0的课程ID
+        similar_course_ids = [k for k, v in similarity_vector_dict.items() if float(v) > 0]
 
         # 增加当前愿望课程ID到相似课程ID列表
         similar_course_ids.append(current_wish_course_id)

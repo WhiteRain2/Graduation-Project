@@ -7,26 +7,16 @@
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/js/bootstrap';
 import NavBar from './components/NavBar';
-import { mapActions } from 'vuex';
-import router from './router';
 
 export default {
   name: "App",
   components: {
     NavBar,
   },
-  methods: {
-    ...mapActions('user', ['fetchUser']),
-  },
-  mounted() {
-    // 检查是否在localStorage中存储了登录状态
-    const isLoggedIn = localStorage.getItem('isUserLoggedIn');
-    if (isLoggedIn) {
-      // 用户已登录，同步用户数据
-      const userId = localStorage.getItem('studentId');
-      this.fetchUser(userId); // 通过 Vuex action 更新用户状态
-      router.push({name: 'home'})
-    }
+  // 使用 created 钩子保证在组件实例被完全创建之后立即执行。
+  created() {
+    // 通过调用 Vuex action 来恢复认证状态
+    this.$store.dispatch('user/restoreAuthState');
   }
 }
 </script>
