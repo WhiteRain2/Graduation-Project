@@ -137,7 +137,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_ROOT = '/static'
+STATIC_ROOT = '../static/'
 STATIC_URL = 'static/'
 
 # Default primary key field type
@@ -153,6 +153,6 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_BEAT_SCHEDULE = {
     'calculate-similarities-everyday': {
         'task': 'demo.tasks.calculate_similarities_task',
-        'schedule': crontab(hour='14', minute='55'),
+        'schedule': crontab(hour='19', minute='30'),
     },
 }
