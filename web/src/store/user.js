@@ -70,7 +70,7 @@ const ModuleUser = {
         if (!state.access || !state.id) {
           throw new Error('Access token or user ID is missing');
         }
-        const userInfoResponse = await axios.get("http://localhost:8000/getinfo/", {
+        const userInfoResponse = await axios.get("http://120.26.228.25:8000/getinfo/", {
           headers: {
             'Authorization': `Bearer ${state.access}`
           },
@@ -120,13 +120,13 @@ const ModuleUser = {
     },
     async login({ commit }, data) {
       try {
-        const response = await axios.post("http://localhost:8000/api/token/", data);
+        const response = await axios.post("http://120.26.228.25:8000/api/token/", data);
     
         if (response.status === 200) {
           // Store access and refresh tokens in localStorage
           localStorage.setItem('access_token', response.data.access);
           localStorage.setItem('refresh_token', response.data.refresh);
-          const userInfoResponse = await axios.get("http://localhost:8000/getinfo/", {
+          const userInfoResponse = await axios.get("http://120.26.228.25:8000/getinfo/", {
             headers: {
               'Authorization': `Bearer ${response.data.access}`
             },
@@ -221,7 +221,7 @@ const ModuleUser = {
     }, 
     async fetchRecommendations({ commit, state }, { student_id, course_id }) {
       try {
-        const response = await axios.post('http://localhost:8000/getrecommend/', {
+        const response = await axios.post('http://120.26.228.25:8000/getrecommend/', {
           student_id,
           course_id
         });

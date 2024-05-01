@@ -39,7 +39,7 @@ export default {
     const communityId = '0'; // 需要根据实际情况替换或者从 props/vue-router 中获取
 
     onMounted(() => {
-      ws.value = new WebSocket(`ws://localhost:8000/ws/community/${communityId}_${studentId.value}/`);
+      ws.value = new WebSocket(`ws://120.26.228.25:8000/ws/community/${communityId}_${studentId.value}/`);
 
       ws.value.onmessage = (event) => {
         const data = JSON.parse(event.data);
