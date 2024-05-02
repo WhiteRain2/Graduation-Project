@@ -9,7 +9,7 @@ from demo.models.relations import CommunityCompletedCourse, CommunityWishCourse
 
 class Community(models.Model):
     name = models.CharField(max_length=200)
-    description = models.TextField()
+    description = models.TextField(default='null')
     gender_ratio = models.FloatField(default=0.5, validators=[MaxValueValidator(1), MinValueValidator(0)])  # 性别比例字段
     learning_style = models.FloatField(default=0.0, validators=[MaxValueValidator(1), MinValueValidator(0)])  # 学习风格
     activity_level = models.FloatField(default=0.0, validators=[MaxValueValidator(1), MinValueValidator(0)])  # 活跃度
@@ -34,9 +34,9 @@ class Community(models.Model):
     def update_communities_attributes(self):
         # 计算性别比例
         male_members_count = self.members.filter(gender=1).count()
-        total_members_count = self.members.count()
+        total_members_count = self.members.count() - self.members.filter(gender=2).count()
         # 防止分母为0的情况
-        self.gender_ratio = male_members_count / total_members_count if total_members_count else 0
+        self.gender_ratio = male_members_count / total_members_count if total_members_count else 0.5
 
         # 计算活跃度的平均值
         self.activity_level = self.members.aggregate(Avg('activity_level'))['activity_level__avg'] or 0

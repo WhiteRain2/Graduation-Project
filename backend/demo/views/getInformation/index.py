@@ -1,12 +1,8 @@
 # views/getInformation/index.py
-
-from django.http import JsonResponse
-
-from django.http import JsonResponse
+from django.db.models import Count
 from rest_framework import views, permissions, response
-
 from django.core.exceptions import ObjectDoesNotExist  # 如果你使用的是自定义异常处理
-
+from demo.models import Community
 from demo.repositories.community_repository import CommunityRepository
 from demo.repositories.student_repository import StudentRepository
 
@@ -15,6 +11,10 @@ class GetInfoView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_community_info(self, community):
+        if community.members.count() == 1:
+            return {
+                'error': 'Not Found!'
+            }
         # 获取社区成员及其基本信息
         members_json = [{'id': student.student_id,
                          'name': student.name,
@@ -53,8 +53,24 @@ class GetInfoView(views.APIView):
                              for wc in student.wishcourse_set.all()]
 
         # 获取已加入的共同体及其基本信息
-        communities_json = [{'id': cm.id, 'name': cm.name, 'description': cm.description}
-                            for cm in student.communities.all()]
+        # 使用annotate来给每个Community添加成员数的注释，并用filter过滤出成员数大于1的Community
+        communities_with_more_than_one_member = Community.objects.annotate(
+            num_members=Count('members', distinct=True)
+        ).filter(num_members__gt=1)
+
+        # 对于学生参与的社区，我们可以再使用一个过滤器来进一步筛选
+        student_communities_with_more_than_one_member = communities_with_more_than_one_member.filter(
+            members=student
+        )
+        communities_json = [
+            {
+                'id': cm.id,
+                'name': cm.name,
+                'count': cm.members.count(),
+                'description': cm.description
+            }
+            for cm in student_communities_with_more_than_one_member
+        ]
 
         return {
             'id': student.student_id,

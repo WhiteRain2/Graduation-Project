@@ -70,7 +70,7 @@ const ModuleUser = {
         if (!state.access || !state.id) {
           throw new Error('Access token or user ID is missing');
         }
-        const userInfoResponse = await axios.get("http://120.26.228.25:8000/getinfo/", {
+        const userInfoResponse = await axios.get("http://localhost:8000/getinfo/", {
           headers: {
             'Authorization': `Bearer ${state.access}`
           },
@@ -120,13 +120,13 @@ const ModuleUser = {
     },
     async login({ commit }, data) {
       try {
-        const response = await axios.post("http://120.26.228.25:8000/api/token/", data);
+        const response = await axios.post("http://localhost:8000/api/token/", data);
     
         if (response.status === 200) {
           // Store access and refresh tokens in localStorage
           localStorage.setItem('access_token', response.data.access);
           localStorage.setItem('refresh_token', response.data.refresh);
-          const userInfoResponse = await axios.get("http://120.26.228.25:8000/getinfo/", {
+          const userInfoResponse = await axios.get("http://localhost:8000/getinfo/", {
             headers: {
               'Authorization': `Bearer ${response.data.access}`
             },
@@ -221,7 +221,7 @@ const ModuleUser = {
     }, 
     async fetchRecommendations({ commit, state }, { student_id, course_id }) {
       try {
-        const response = await axios.post('http://120.26.228.25:8000/getrecommend/', {
+        const response = await axios.post('http://localhost:8000/getrecommend/', {
           student_id,
           course_id
         });
@@ -250,6 +250,31 @@ const ModuleUser = {
       } catch (error) {
         // 输出错误到控制台并抛出，以便可以进行适当的错误处理。
         console.error('Fetch Recommendations Error:', error);
+        throw error;
+      }
+    },
+    joinOrLeaveCommunity: async ({ commit, dispatch, state }, { student_id, community_id, operation }) => {
+      try {
+        const response = await axios.post('http://localhost:8000/operation/', {
+          student_id,
+          community_id,
+          operation
+        });
+        if (response.data.error) {
+          throw new Error(response.data.error);
+        } else {
+          // 重新获取用户数据来确保状态的实时性
+          dispatch('fetchUser', student_id);
+          
+          // 更新推荐的共同体
+          let updatedCommunities = state.recommendedCommunities.map(community => ({
+            ...community,
+            joined: community.id === community_id ? operation === 'join' : community.joined
+          }));
+          commit('updateRecommendedCommunities', updatedCommunities);
+        }
+      } catch (error) {
+        console.error(error);
         throw error;
       }
     },

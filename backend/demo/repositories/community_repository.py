@@ -10,6 +10,10 @@ from django.db import transaction
 class CommunityRepository:
 
     @staticmethod
+    def create_community(community_name):
+        community = Community.objects.create(name=community_name)
+
+    @staticmethod
     def get_community_by_id(community_id):
         """
         通过 ID 获取共同体。
@@ -34,7 +38,7 @@ class CommunityRepository:
         # 将学生添加到共同体
         community.members.add(student)
         # 调用方法更新共同体所有属性
-        Community.update_all_attributes()
+        community.update_all_attributes()
 
     @staticmethod
     def remove_member_from_community(community_id, student_id):

@@ -1,11 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue';
-import UserListView from '../views/UserListView';
+import CommunityList from '../views/CommunityListView';
 import LoginView from '../views/LoginView';
 import RegisterView from '../views/RegisterView';
-import UserProfileView from '@/views/UserProfileView.vue';
+import ChatRoomView from '@/views/ChatRoomView.vue';
 import NotFoundView from '../views/NotFoundView';
 import store from '@/store';
+import UserProfileView from '../views/UserProfileView';
 
 const routes = [
   {
@@ -15,9 +16,9 @@ const routes = [
     meta: { requiresAuth: true } // 需要登录权限
   },
   {
-    path: '/userlist/',
-    name: 'userlist',
-    component: UserListView,
+    path: '/communities/',
+    name: 'communities',
+    component: CommunityList,
     meta: { requiresAuth: true } // 需要登录权限
   },
   {
@@ -33,9 +34,14 @@ const routes = [
     meta: { requiresAuth: false } // 不需要登录权限
   },
   {
-    path:'/userprofile/',
-    name:'userprofile',
-    component:UserProfileView,
+    path: '/userprofile/:userId/',
+    name: 'userprofile',
+    component: UserProfileView
+  },
+  {
+    path:'/chat/',
+    name:'chat',
+    component:ChatRoomView,
     meta: { requiresAuth: true }
 
   },

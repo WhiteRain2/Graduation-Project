@@ -6,13 +6,12 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
-
-from demo.models import Student, StudentProfile
+from demo.models import StudentProfile
+from demo.repositories.community_repository import CommunityRepository
 from demo.repositories.course_repository import CourseRepository
 from demo.repositories.student_repository import StudentRepository
-from demo.repositories.community_repository import CommunityRepository
 from demo.views.operation.index import student_join_community, student_leave_community
-from demo.views.recommend.index import get_recommended_communities
+from demo.views.recommend.community_recommender import CommunityRecommender
 
 
 @require_http_methods(['POST'])
@@ -36,7 +35,8 @@ def recommend_communities(request):
         return JsonResponse({'error': str(e)}, safe=False)
 
     # 获取推荐的学习共同体
-    recommended_communities = get_recommended_communities(student_id, wish_course.course_id)
+    recommender = CommunityRecommender(student_id, wish_course.course_id)
+    recommended_communities = recommender.recommend_communities()
 
     # 构造返回结果
     community_list = [
@@ -50,7 +50,7 @@ def recommend_communities(request):
     return JsonResponse(community_list, safe=False)
 
 
-@require_http_methods(['POST'])
+@require_http_methods(['GET', 'POST'])
 def operation(request):
     if not request.method == 'POST':
         return JsonResponse({'error': 'Method Not Allowed'}, status=405, safe=False)
@@ -59,7 +59,6 @@ def operation(request):
     opera = data.get('operation')
     student_id = data.get('student_id')
     community_id = data.get('community_id')
-
     # 检查是否提供了必要的参数
     if not all([opera, student_id, community_id]):
         return JsonResponse({'error': 'Missing required parameters.'}, status=400)
@@ -110,5 +109,9 @@ def regis(request):
 
     student_profile = StudentProfile(user=user, student=student)
     student_profile.save()
+
+    # 为新用户创建共同体
+    community = CommunityRepository.create_community(community_name=student.name)
+    CommunityRepository.add_member_to_community(community.id, student_id)
 
     return JsonResponse({"success": "用户注册成功。"}, status=201)

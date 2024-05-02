@@ -59,7 +59,7 @@ export default {
 
       try {
         // 发送POST请求到服务器注册新用户
-        const response = await axios.post('http://120.26.228.25:8000/register/', {
+        const response = await axios.post('http://localhost:8000/register/', {
           username: username.value,
           password: password.value,
           email: email.value
