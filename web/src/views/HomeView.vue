@@ -98,7 +98,9 @@
                   <td class="text-center">{{ community.id }}</td>
                   <td class="text-center">{{ community.name }}</td>
                   <td class="text-center">{{ community.description }}</td>
-                  <td class="text-center">{{ typeof community.similarity === 'number' ? community.similarity.toFixed(2) : '' }}</td>
+                  <td class="text-center">
+                    {{ typeof community.similarity === 'number' ? community.similarity.toFixed(2) : '' }} -- {{ typeof community.com_sim === 'number' ? community.com_sim.toFixed(2) : '' }} + {{ typeof community.std_sim === 'number' ? community.std_sim.toFixed(2) : '' }}
+                  </td>
                   <td class="text-center">
                     <button type="button" class="btn btn-outline-secondary me-2">查看</button>
                     <button type="button" class="btn btn-outline-secondary"

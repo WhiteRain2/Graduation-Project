@@ -25,7 +25,7 @@
                   <td class="text-center">{{ community.description }}</td>
                   <td class="text-center">{{ community.count }}</td>
                   <td class="text-center">
-                    <button type="button" class="btn btn-outline-secondary me-2" @click="handleViewCommunity(community.id)">查看</button>
+                    <button type="button" class="btn btn-outline-secondary me-2" @click="handleViewCommunity(community.id)">聊天</button>
                     <button type="button" class="btn btn-outline-danger"
                       @click="handleJoinOrLeaveCommunity(community.id, 'leave')"
                     >
@@ -39,19 +39,21 @@
         </div>
       </div>
     </div>
-    <div v-if="isChatModalVisible" class="modal-backdrop">
-      <ChatMessages 
-        :studentId="studentId" 
-        :communityId="selectedCommunityId" 
-        @close="handleCloseChatModal"
-      ></ChatMessages>
-    </div>
+  <ModalContext :isVisible="isChatModalVisible" @update:isVisible="isChatModalVisible = $event">
+    <ChatMessages 
+      v-if="isChatModalVisible"
+      :studentId="studentId" 
+      :communityId="selectedCommunityId" 
+      @close="isChatModalVisible = false">
+    </ChatMessages>
+  </ModalContext>
   </ContentBase>
 </template>
 
 <script>
 import ContentBase from '../components/ContentBase';
 import ChatMessages from '@/components/ChatMessages.vue'
+import ModalContext from '@/components/ModalContext.vue'
 import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
 
@@ -59,7 +61,8 @@ export default {
   name: 'HomeView',
   components: {
     ContentBase,
-    ChatMessages
+    ChatMessages,
+    ModalContext
   },
   setup() {
     const store = useStore();
@@ -116,26 +119,4 @@ export default {
 </script>
 
 <style scoped>
-/* 遮罩层样式 */
-.modal-backdrop {
-  position: fixed; /* 固定位置 */
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5); /* 半透明遮罩 */
-  display: flex; /* Flex布局 */
-  justify-content: center; /* 水平居中 */
-  align-items: center; /* 垂直居中 */
-  z-index: 1000; /* 高于一般内容的z-index */
-}
-
-/* 模态框容器样式 */
-.modal-dialog {
-  /* 样式取决于具体设计，以下是基础示例 */
-  width: 600px; /* 宽度自定义 */
-  max-width: 100%; /* 最大宽度不超过屏幕宽度 */
-  margin: auto; /* 边距自动 */
-  z-index: 1001; /* 高于遮罩层 */
-}
 </style>

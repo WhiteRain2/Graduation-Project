@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-container flex-column p-3">
+  <div class="chat-container flex-column p-4">
     <div class="messages flex-grow-1 overflow-auto mb-3">
       <div v-for="(msg, index) in messages" :key="index" class="d-flex mb-2" :class="{'justify-content-end': msg.isOwnMessage, 'justify-content-start': !msg.isOwnMessage}">
         <!-- 对他人发送的消息，将sender和timestamp放在message的左边 -->

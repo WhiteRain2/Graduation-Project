@@ -44,7 +44,9 @@ def recommend_communities(request):
             'id': community.id,
             'name': community.name,
             'description': community.description,
-            'similarity': sim,
+            'similarity': sim[0],
+            'com_sim': sim[1],
+            'std_sim': sim[2]
         } for sim, community in recommended_communities
     ]
     return JsonResponse(community_list, safe=False)
@@ -62,7 +64,6 @@ def operation(request):
     # 检查是否提供了必要的参数
     if not all([opera, student_id, community_id]):
         return JsonResponse({'error': 'Missing required parameters.'}, status=400)
-
     # 根据 operation 触发对应的操作
     if opera == 'join':
         try:

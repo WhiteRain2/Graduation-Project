@@ -46,20 +46,16 @@ class StudentRepository:
         """
         with transaction.atomic():
             student = StudentRepository.get_student_by_id(student_id)
-
             # 检查学生当前加入的共同体是否已达到上限
             if student.communities.count() >= student.MAX_COMMUNITIES:
                 raise ValidationError(f"Student with id {student_id} has reached the maximum community limit.")
-
             # 判断共同体是否存在
             try:
                 community = CommunityRepository.get_community_by_id(community_id)
             except Community.DoesNotExist:
                 raise ValidationError(f"Community with id {community_id} does not exist.")
-
             if student in community.members.all():
                 raise ValidationError(f"Student with id {student_id} has already joined the community.")
-
             # 调用 CommunityRepository 的方法将学生添加到共同体
             CommunityRepository.add_member_to_community(community_id, student_id)
 
