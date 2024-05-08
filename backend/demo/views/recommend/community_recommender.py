@@ -23,6 +23,12 @@ class CommunityRecommender:
             Prefetch('completed_courses'),
             Prefetch('wish_courses')
         )
+        self.communities = CommunityRepository.get_eligible_communities_for_recommendation(
+            student_id, current_wish_course_id
+        ).prefetch_related(
+            Prefetch('completed_courses', queryset=CommunityCompletedCourse.objects.all()),
+            Prefetch('wish_courses', queryset=CommunityWishCourse.objects.all())
+        )
 
     @staticmethod
     def load_course_similarities():
@@ -60,20 +66,34 @@ class CommunityRecommender:
         student_wish_course_ids = self.student.wish_courses.values_list('course_id', flat=True)
         if self.current_wish_course_id not in student_wish_course_ids:
             return -1
+
         com_completed_course_data = [{
             'id': ccc.course.course_id,
             'member_ratio': ccc.member_ratio
         } for ccc in CommunityCompletedCourse.objects.filter(community=community)]
+
         com_wish_course_data = [{
             'id': ccc.course.course_id,
             'member_ratio': ccc.member_ratio
         } for ccc in CommunityWishCourse.objects.filter(community=community)]
+        com_completed_course_data = [
+            {
+                'id': ccc.course.course_id,
+                'member_ratio': ccc.member_ratio
+            } for ccc in community.completed_courses.all()
+        ]
+        com_wish_course_data = [
+            {
+                'id': ccc.course.course_id,
+                'member_ratio': ccc.member_ratio
+            } for ccc in community.wish_courses.all()
+        ]
 
-        # Calculate the similarity score for the current wish course with the set of completed courses
+        # 评估学生需要该共同体的程度
         wish_course_similarity = self.get_courses_similarity([self.current_wish_course_id],
                                                              com_completed_course_data)
 
-        # Calculate the similarity score for the set of completed student courses with the community's wish courses
+        # 评估该共同体需要用户的程度
         completed_course_similarity = 0
         if self.student.completed_courses.exists():
             student_completed_course_ids = self.student.completed_courses.values_list('course_id', flat=True)

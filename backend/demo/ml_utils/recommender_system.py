@@ -143,6 +143,7 @@ class RecommenderSystem:
         return student_top_n_similarity_dict, course_top_n_similarity_dict
 
     def save_similarities(self, student_similarity_dict, course_similarity_dict):
+        # 保存相似度至数据库
         with transaction.atomic():
             StudentSimilarity.objects.all().delete()
             CourseSimilarity.objects.all().delete()
@@ -150,38 +151,33 @@ class RecommenderSystem:
             student_similarity_list = []
             course_similarity_list = []
 
-            # Prepare StudentSimilarity objects
+            # 准备StudentSimilarity对象并批量创建
             for student, students in student_similarity_dict.items():
                 similarity_dict = {str(s.student_id): float(similarity) for s, similarity in students}
                 student_similarity = StudentSimilarity(student=student, similarity_vector=json.dumps(similarity_dict))
                 student_similarity_list.append(student_similarity)
 
-            # Bulk create for StudentSimilarity
             StudentSimilarity.objects.bulk_create(student_similarity_list)
 
-            # Prepare CourseSimilarity objects
+            # 准备CourseSimilarity对象并批量创建
             for course, courses in course_similarity_dict.items():
                 similarity_dict = {str(c.course_id): float(similarity) for c, similarity in courses}
                 course_similarity = CourseSimilarity(course=course, similarity_vector=json.dumps(similarity_dict))
                 course_similarity_list.append(course_similarity)
 
-            # Bulk create for CourseSimilarity
             CourseSimilarity.objects.bulk_create(course_similarity_list)
 
     def calculate(self):
-        # Prepare data
+        # 计算流程
         print('preparing data...')
         self.prepare_data()
 
-        # Train the model
         print('training model...')
         model = self.train_model()
 
-        # Compute similarity matrices
         print('computing similarity matrices...')
         student_similarity_dict, course_similarity_dict = self.compute_similarity_matrices(model)
 
-        # Save similarities to the database
         print('saving similarities...')
         self.save_similarities(student_similarity_dict, course_similarity_dict)
 

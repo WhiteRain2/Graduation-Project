@@ -11,7 +11,7 @@ class CommunityRepository:
 
     @staticmethod
     def create_community(community_name):
-        community = Community.objects.create(name=community_name)
+        return Community.objects.create(name=community_name)
 
     @staticmethod
     def get_community_by_id(community_id):

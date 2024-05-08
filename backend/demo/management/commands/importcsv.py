@@ -2,117 +2,117 @@ from django.core.management.base import BaseCommand, CommandError
 import csv
 import random
 from django.db.models import F
-from demo.models.student import Student
-from demo.models.community import Community
-
+from demo.models import Student, Community, Course, CompletedCourse, CommunityCompletedCourse
+import time
 
 class Command(BaseCommand):
-    help = 'Import student style and activity level from a CSV file, then randomize gender and update community attributes.'
+    help = 'Import student data from CSV files and randomize attributes.'
 
     def handle(self, *args, **options):
-        csv_file_path = 'demo/static/students_activity_and_styles.csv'
+        start_time = time.time()
+        scores_csv_file_path = 'demo/static/scores.csv'
+        students_activity_and_styles_csv_file_path = 'demo/static/students_activity_and_styles.csv'
+        learning_style_mapping = {'未知': 0, '发散型': 1, '同化型': 2, '聚敛型': 3, '顺应型': 4}
         discarded_count = 0
+        students_updated_count = 0
+        communities_updated_count = 0
 
-        self.stdout.write("Starting the import process...")
+        # 更新学生的活动水平和学习风格等信息
         try:
-            with open(csv_file_path, newline='') as csvfile:
+            # 处理活动水平和学习风格的CSV文件
+            self.stdout.write("开始处理学生活动水平和学习风格的CSV文件...")
+            with open(students_activity_and_styles_csv_file_path, newline='') as csvfile:
                 reader = csv.DictReader(csvfile)
-                # 学习风格映射
-                learning_style_mapping = {'未知': 0, '发散型': 1, '同化型': 2, '聚敛型': 3, '顺应型': 4}
-
                 for row in reader:
                     student_id = int(row['userId'])
                     learning_style = learning_style_mapping.get(row['LearningStyle'], 0)
-                    # 在转换前检查ActivityLevel是否为空或非数值
                     activity_level_str = row['ActivityLevel']
-                    try:
-                        activity_level = float(activity_level_str)
-                    except ValueError:  # 如果无法转换为浮点数，使用默认值0.5
-                        activity_level = 0.5
 
                     try:
-                        student = Student.objects.get(student_id=student_id)
+                        activity_level = float(activity_level_str) if activity_level_str else 0.5
+                    except ValueError:
+                        activity_level = 0.5
+                        discarded_count += 1  # 记录无法转换的记录
+
+                    student, created = Student.objects.get_or_create(
+                        student_id=student_id,
+                        defaults={
+                            'learning_style': learning_style,
+                            'activity_level': activity_level,
+                        }
+                    )
+
+                    if not created:
                         student.learning_style = learning_style
                         student.activity_level = max(0.0, min(1.0, activity_level))
-                        student.save()
-                    except Student.DoesNotExist:
-                        discarded_count += 1
+                        students_updated_count += 1
 
-            self.stdout.write(self.style.SUCCESS('Completed updating/verifying existing student records.'))
+                    student.gender = random.choice([0, 1])
+                    student.save()
 
-            # 遍历所有学生对象，随机赋值性别属性
-            self.stdout.write("Randomizing gender of all students...")
-            for student in Student.objects.all():
-                student.gender = random.choice([0, 1])
-                student.save()
+            self.stdout.write(self.style.SUCCESS(
+                f"完成学生活动水平和学习风格信息的导入，更新了 {students_updated_count} 名学生的信息。"))
 
-            self.stdout.write(self.style.SUCCESS("Successfully randomized genders."))
+            # 处理分数的CSV文件
+            self.stdout.write("开始处理学生分数的CSV文件...")
+            with open(scores_csv_file_path, newline='') as csvfile:
+                data_reader = csv.DictReader(csvfile)
+                for row in data_reader:
+                    student, student_created = Student.objects.get_or_create(
+                        student_id=int(row['userId'])
+                    )
 
-            # 遍历所有共同体对象，执行update_all_attributes方法
-            self.stdout.write("Updating all community attributes...")
+                    course, course_created = Course.objects.get_or_create(
+                        course_id=int(row['courseId'])
+                    )
+
+                    if course_created:
+                        course.name = f"Course {row['courseId']}"
+                        course.description = "Course description here."
+                        course.save()
+
+                    comp_course, comp_course_created = CompletedCourse.objects.get_or_create(
+                        student=student,
+                        course=course,
+                        defaults={'score': float(row['score'])}
+                    )
+
+                    if not comp_course_created:
+                        comp_course.score = float(row['score'])
+                        comp_course.save()
+
+                    community, community_created = Community.objects.get_or_create(
+                        name=f"Community for Student {row['userId']}")
+                    if community_created:
+                        community.description = f"Community description here."
+                        community.save()
+
+                    student.communities.add(community)
+                    CommunityCompletedCourse.objects.get_or_create(
+                        community=community,
+                        course=course
+                    )
+
+                    student.save()
+                    community.save()
+                    if student_created or community_created:
+                        communities_updated_count += 1
+
+            self.stdout.write(self.style.SUCCESS(f'完成学生分数的处理，共更新了 {communities_updated_count} 个社群。'))
+            self.stdout.write(self.style.SUCCESS(f'由于学生不存在而丢弃的记录数量为 {discarded_count}。'))
+
+            # 更新社群的所有属性
+            self.stdout.write("开始更新社群的所有属性...")
             for community in Community.objects.all():
                 community.update_all_attributes()
 
-            self.stdout.write(self.style.SUCCESS('Successfully updated community attributes.'))
-            self.stdout.write(self.style.SUCCESS(f'Discarded {discarded_count} records for non-existing students.'))
-        except FileNotFoundError:
-            self.stdout.write(self.style.ERROR('CSV file not found. Please make sure the path is correct.'))
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f'An error occurred: {e}'))
+            self.stdout.write(self.style.SUCCESS(f"完成社群属性更新。"))
 
-    # 导入分数
-    #help = '从CSV文件中导入成绩信息'
-    # def handle(self, *args, **options):
-    #     # 替换为您的CSV文件实际路径
-    #     csv_file_path = 'demo/static/scores.csv'
-    #
-    #     # 打开CSV文件并读取内容
-    #     with open(csv_file_path, newline='') as csvfile:
-    #         data_reader = csv.DictReader(csvfile)
-    #         for row in data_reader:
-    #             # 获取或创建学生对象
-    #             student, student_created = Student.objects.get_or_create(student_id=int(row['userId']))
-    #
-    #             # 通过course_id获取或创建课程对象
-    #             course, course_created = Course.objects.get_or_create(course_id=int(row['courseId']))
-    #
-    #             if course_created:
-    #                 # 如果创建了新课程，您可能需要额外填充其他课程信息，例如课程名称和描述
-    #                 course.name = f"Course {row['courseId']}"
-    #                 course.description = "Course description here."
-    #                 course.save()
-    #
-    #             # 创建学生的已完成课程
-    #             comp_course, comp_course_created = CompletedCourse.objects.get_or_create(
-    #                 student=student,
-    #                 course=course,
-    #                 defaults={'score': float(row['score'])}
-    #             )
-    #
-    #             if not comp_course_created:
-    #                 # 如果已经创建了这个完成的课程，更新成绩
-    #                 comp_course.score = float(row['score'])
-    #                 comp_course.save()
-    #
-    #             # 创建或获取只包含该名学生的共同体对象
-    #             community, community_created = Community.objects.get_or_create(
-    #                 name=f"Community for Student {row['userId']}")
-    #             if community_created:
-    #                 # 如果创建了新的共同体，设置共同体的描述或其他相关属性
-    #                 community.description = f"Community description here."
-    #                 community.save()
-    #
-    #             # 将学生添加到共同体中，并确保共同体的已完成课程包含这名学生已经完成的课程
-    #             student.communities.add(community)
-    #
-    #             # 对每个新创建的共同体，添加学生已经完成的课程
-    #             CommunityCompletedCourse.objects.get_or_create(
-    #                 community=community,
-    #                 course=course
-    #             )
-    #
-    #             # 保存学生和共同体对象
-    #             student.save()
-    #             community.save()
-    #
-    #     self.stdout.write(self.style.SUCCESS('成功导入CSV文件数据'))
+            self.stdout.write(self.style.SUCCESS(f"数据导入和更新成功完成。"))
+            end_time = time.time()  # 脚本结束时的时间
+            execution_time = end_time - start_time  # 计算执行时间
+            self.stdout.write(self.style.SUCCESS(f"数据导入和更新成功完成。总执行时间：{execution_time:.2f}秒。"))
+        except FileNotFoundError as e:
+            self.stdout.write(self.style.ERROR(f'CSV文件未找到。请确保路径是正确的。 {e}'))
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f'处理过程中出现错误：{e}'))
