@@ -208,7 +208,7 @@ const ModuleUser = {
         // 你可以考虑给 fetchUser 传递 accessToken，或是在 fetchUser 内部直接使用 state 中的 access 令牌
         dispatch('fetchUser').then(() => {
           // 用户信息获取成功后，跳转到home页面
-          router.push({name: 'home'});
+          console.log('Login!')
         }).catch(error => {
           console.error('Error fetching user on restore:', error);
           // 错误处理，例如如果令牌失效，则需要清除本地存储并注销用户

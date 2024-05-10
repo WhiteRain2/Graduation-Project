@@ -67,10 +67,10 @@ class CourseTask(models.Model):
     start_time = models.BigIntegerField(default=0)
     end_time = models.BigIntegerField(default=0)
     status = models.CharField(max_length=255, choices=STATUS_CHOICES, default='create')
+    type = models.CharField(max_length=255, choices=TYPE_CHOICES, default='unknown')
     created_user_id = models.BigIntegerField()
     created_time = models.BigIntegerField(default=0)
     updated_time = models.BigIntegerField(default=0)
-    # ... 其他字段定义
 
     def __str__(self):
         return f"{self.course} Task: {self.title}"

@@ -7,6 +7,7 @@ import ChatRoomView from '@/views/ChatRoomView.vue';
 import NotFoundView from '../views/NotFoundView';
 import store from '@/store';
 import UserProfileView from '../views/UserProfileView';
+import CourseDetailView from '@/views/CourseDetailView.vue'
 
 const routes = [
   {
@@ -36,7 +37,8 @@ const routes = [
   {
     path: '/userprofile/:userId/',
     name: 'userprofile',
-    component: UserProfileView
+    component: UserProfileView,
+    meta: { requiresAuth: true }
   },
   {
     path:'/chat/',
@@ -44,6 +46,12 @@ const routes = [
     component:ChatRoomView,
     meta: { requiresAuth: true }
 
+  },
+  {
+    path: '/courses/:course_id',
+    name: 'CourseDetail',
+    component: CourseDetailView,
+    meta: { requiresAuth: true }
   },
   {
     path: '/404/',
@@ -68,9 +76,11 @@ router.beforeEach((to, from, next) => {
   
   if (to.meta.requiresAuth && !isLoggedIn) {
     // 如果访问的路由需要授权但用户未登录，重定向到登录页
+    console.log('NO');
     next({ name: 'login' });
   } else {
     // 否则，继续当前的导航
+    console.log('LOGIN!');
     next();
   }
 });

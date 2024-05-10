@@ -1,6 +1,6 @@
 # demo/repositories/course_repository.py
 from django.core.exceptions import ObjectDoesNotExist
-from demo.models import Course
+from demo.models import Course, CourseChapter, CourseTask
 
 
 class CourseRepository:
@@ -18,8 +18,8 @@ class CourseRepository:
         """
         try:
             return Course.objects.get(pk=course_id)
-        except ObjectDoesNotExist:
-            raise ValueError(f"Not Exist")
+        except Course.DoesNotExist:
+            raise ValueError("Course Not Exist")
 
     @staticmethod
     def update_course(course_id, **update_data):
@@ -28,3 +28,31 @@ class CourseRepository:
         """
         Course.objects.filter(pk=course_id).update(**update_data)
 
+    @staticmethod
+    def get_all_courses():
+        """
+        获取所有课程的列表。
+        """
+        return Course.objects.all()
+
+    @staticmethod
+    def get_chapters_by_course(course_id):
+        """
+        根据课程ID获取所有相关章节信息。
+        """
+        try:
+            course = Course.objects.get(pk=course_id)
+            return course.chapters.all().order_by('seq')
+        except Course.DoesNotExist:
+            raise ValueError("Course Not Exist")
+
+    @staticmethod
+    def get_tasks_by_course(course_id):
+        """
+        根据课程ID获取所有相关任务信息。
+        """
+        try:
+            course = Course.objects.get(pk=course_id)
+            return course.tasks.all().order_by('seq')
+        except Course.DoesNotExist:
+            raise ValueError("Course Not Exist")

@@ -13,7 +13,10 @@ class Command(BaseCommand):
         parser.add_argument('course_chapters_csv', type=str)
         parser.add_argument('course_tasks_csv', type=str)
 
+    @transaction.atomic
     def handle(self, *args, **options):
+        CourseTask.objects.all().delete()
+        CourseChapter.objects.all().delete()
         self.stdout.write("开始导入课程章节...")
         self.import_course_chapters(options['course_chapters_csv'])
         self.stdout.write("完成课程章节的导入。\n开始导入课程任务...")
@@ -73,7 +76,7 @@ class Command(BaseCommand):
 
     def update_course_names(self, chapters):
         for chapter in chapters:
-            if chapter.seq == 1 and chapter.type == 'chapter':
+            if chapter.type == 'chapter':
                 Course.objects.filter(course_id=chapter.course_id).update(name=chapter.title)
 
     @transaction.atomic
@@ -106,6 +109,8 @@ class Command(BaseCommand):
                     end_time=end_time,
                     status=row.get('status', 'unknown') if row.get('status') in dict(
                         CourseTask.STATUS_CHOICES).keys() else 'unknown',
+                    type=row.get('type', 'unknown') if row.get('type') in dict(
+                        CourseTask.TYPE_CHOICES).keys() else 'unknown',
                     created_user_id=self.parse_int(row.get('createdUserId')),
                     created_time=created_time,
                     updated_time=updated_time

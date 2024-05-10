@@ -35,7 +35,7 @@
           </router-link>
         </li>
         <li class="nav-item">
-          <a class="nav-link" style="cursor: pointer" @click="logout">退出</a>
+          <router-link class="nav-link" :to="{name: 'login'}" style="cursor: pointer" @click="logout">退出</router-link>
         </li>
       </ul>
     </div>

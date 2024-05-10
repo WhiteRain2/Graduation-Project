@@ -68,6 +68,24 @@ class StudentAdmin(admin.ModelAdmin):
     list_wish_courses.short_description = 'Wish Courses IDs'
 
 
+class StudentProfileAdmin(admin.ModelAdmin):
+    list_display = ('id', 'get_student_id', 'get_name', 'get_user_id')
+
+    def get_student_id(self, obj):
+        return obj.student.student_id
+    get_student_id.short_description = 'Student ID'
+
+    def get_name(self, obj):
+        if obj.student.name != obj.user.username:
+            return f"{obj.user.username}_OOBS"
+        return obj.student.name
+    get_name.short_description = 'Name'
+
+    def get_user_id(self, obj):
+        return obj.user.id
+    get_user_id.short_description = 'User ID'
+
+
 # 自定义共同体模型的admin显示
 class CommunityAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'gender_ratio', 'learning_style', 'activity_level',
@@ -126,11 +144,11 @@ admin.site.register(Course, CourseAdmin)
 admin.site.register(HomoStudentSimilarity, HomoStudentSimilarityAdmin)
 admin.site.register(StudentSimilarity, StudentSimilarityAdmin)
 admin.site.register(CourseSimilarity, CourseSimilarityAdmin)
+admin.site.register(StudentProfile, StudentProfileAdmin)
 
 # 针对关系模型保持默认的admin显示
 admin.site.register(CommunityCompletedCourse)
 admin.site.register(CommunityWishCourse)
 admin.site.register(CompletedCourse)
 admin.site.register(WishCourse)
-admin.site.register(StudentProfile)
 admin.site.register(Message)

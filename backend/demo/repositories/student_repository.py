@@ -1,5 +1,7 @@
 # demo/repositories/student_repository.py
 from django.core.exceptions import ValidationError
+from django.utils import timezone
+
 from demo.models import Student, Course, Community, WishCourse, CompletedCourse
 from django.db import transaction
 from demo.repositories.community_repository import CommunityRepository
@@ -70,6 +72,30 @@ class StudentRepository:
         CommunityRepository.remove_member_from_community(community_id, student_id)
 
 
+    # @staticmethod
+    # def add_wish_course(student_id, course_id):
+    #     """
+    #     为学生添加愿望课程，并且更新相关的共同体愿望课程列表。
+    #     """
+    #     with transaction.atomic():
+    #         student = StudentRepository.get_student_by_id(student_id)
+    #
+    #         # 确认愿望课程不是学生已完成的课程
+    #         if student.completed_courses.filter(pk=course_id).exists():
+    #             raise ValueError("Course Completed")
+    #         if student.wish_courses.filter(pk=course_id).exists():
+    #             return
+    #         # 添加愿望课程到学生
+    #         if student.wish_courses.count() >= Student.MAX_WISH_COURSES:
+    #             oldest_wish_course = student.wish_courses.order_by('timestamp').first()
+    #             oldest_wish_course.delete()
+    #
+    #         WishCourse.objects.create(student=student, course_id=course_id)
+    #
+    #         # 检查并更新共同体的愿望课程列表
+    #         for community in student.communities.all():
+    #             community.update_courses()
+
     @staticmethod
     def add_wish_course(student_id, course_id):
         """
@@ -79,17 +105,24 @@ class StudentRepository:
             student = StudentRepository.get_student_by_id(student_id)
 
             # 确认愿望课程不是学生已完成的课程
-            if student.completed_courses.filter(pk=course_id).exists():
-                raise ValueError("Course Completed")
-            if student.wish_courses.filter(pk=course_id).exists():
-                return
-            # 添加愿望课程到学生
-            if student.wish_courses.count() >= Student.MAX_WISH_COURSES:
-                oldest_wish_course = student.wish_courses.order_by('timestamp').first()
-                oldest_wish_course.delete()
+            if student.completed_courses.filter(course_id=course_id).exists():
+                raise ValueError("Course already completed")
+            # 确认这门课不在愿望课程列表中
+            existing_wish = student.wishcourse_set.filter(course_id=course_id)
+            if existing_wish.exists():
+                return  # 早已存在于愿望课程中
 
-            WishCourse.objects.create(student=student, course_id=course_id)
+            # 学生愿望课程已满，更新最旧的一门课程
+            if student.wishcourse_set.count() >= Student.MAX_WISH_COURSES:
+                oldest_wish = student.wishcourse_set.earliest('timestamp')
+                oldest_wish.course_id = course_id
+                oldest_wish.timestamp = timezone.now()
+                oldest_wish.save()
+            else:
+                # 直接添加新的愿望课程
+                WishCourse.objects.create(student=student, course_id=course_id)
 
             # 检查并更新共同体的愿望课程列表
+            # 注意：这里假设update_courses方法存在并可以正确调用
             for community in student.communities.all():
                 community.update_courses()

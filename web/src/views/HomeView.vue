@@ -47,7 +47,7 @@
       <div class="col-sm-6">
         <div class="card">
           <div class="card-header">
-            你最近感兴趣的课程
+            你最近正在学的课程
           </div>
           <div class="card-body">
             <table class="table table-hover">

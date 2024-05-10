@@ -1,5 +1,7 @@
 # views/recommend/index.py
 import json
+from collections import defaultdict
+
 from django.db.models import Prefetch, Avg
 from demo.models import CourseSimilarity, CommunityCompletedCourse, CommunityWishCourse
 from demo.repositories.community_repository import CommunityRepository
@@ -19,15 +21,6 @@ class CommunityRecommender:
         self.student = StudentRepository.get_student_by_id(student_id)
         self.communities = CommunityRepository.get_eligible_communities_for_recommendation(
             student_id, current_wish_course_id
-        ).prefetch_related(
-            Prefetch('completed_courses'),
-            Prefetch('wish_courses')
-        )
-        self.communities = CommunityRepository.get_eligible_communities_for_recommendation(
-            student_id, current_wish_course_id
-        ).prefetch_related(
-            Prefetch('completed_courses', queryset=CommunityCompletedCourse.objects.all()),
-            Prefetch('wish_courses', queryset=CommunityWishCourse.objects.all())
         )
 
     @staticmethod
@@ -62,33 +55,13 @@ class CommunityRecommender:
         # 避免除以0，如果没有任何比较发生，则返回0
         return total_similarity / comparisons if comparisons else 0
 
-    def evaluate_course_similarity(self, community):
+    def evaluate_course_similarity(self, community, completed_courses_mapping, wish_courses_mapping):
         student_wish_course_ids = self.student.wish_courses.values_list('course_id', flat=True)
         if self.current_wish_course_id not in student_wish_course_ids:
             return -1
 
-        com_completed_course_data = [{
-            'id': ccc.course.course_id,
-            'member_ratio': ccc.member_ratio
-        } for ccc in CommunityCompletedCourse.objects.filter(community=community)]
-
-        com_wish_course_data = [{
-            'id': ccc.course.course_id,
-            'member_ratio': ccc.member_ratio
-        } for ccc in CommunityWishCourse.objects.filter(community=community)]
-        com_completed_course_data = [
-            {
-                'id': ccc.course.course_id,
-                'member_ratio': ccc.member_ratio
-            } for ccc in community.completed_courses.all()
-        ]
-        com_wish_course_data = [
-            {
-                'id': ccc.course.course_id,
-                'member_ratio': ccc.member_ratio
-            } for ccc in community.wish_courses.all()
-        ]
-
+        com_completed_course_data = completed_courses_mapping.get(community.id, [])
+        com_wish_course_data = wish_courses_mapping.get(community.id, [])
         # 评估学生需要该共同体的程度
         wish_course_similarity = self.get_courses_similarity([self.current_wish_course_id],
                                                              com_completed_course_data)
@@ -135,17 +108,40 @@ class CommunityRecommender:
 
         return similarity_score
 
-    def evaluate_similarity(self, community):
-        c = self.evaluate_course_similarity(community)
+    def evaluate_similarity(self, community, completed_courses_mapping, wish_courses_mapping):
+        c = self.evaluate_course_similarity(community, completed_courses_mapping, wish_courses_mapping)
         s = self.evaluate_student_similarity(community)
         return 0.4 * c + 0.6 * s, c, s
 
     def recommend_communities(self):
         recommended_communities = []
 
+        # 获取所有社区的ID
+        community_ids = self.communities.values_list('id', flat=True)
+
+        # 初始化community_id映射到课程列表的字典
+        completed_courses_mapping = defaultdict(list)
+        for ccc in CommunityCompletedCourse.objects.filter(community__in=community_ids).values('community_id',
+                                                                                               'course__course_id',
+                                                                                               'member_ratio'):
+            completed_courses_mapping[ccc['community_id']].append({
+                'id': ccc['course__course_id'],
+                'member_ratio': ccc['member_ratio']
+            })
+
+        wish_courses_mapping = defaultdict(list)
+        for cwc in CommunityWishCourse.objects.filter(community__in=community_ids).values('community_id',
+                                                                                          'course__course_id',
+                                                                                          'member_ratio'):
+            wish_courses_mapping[cwc['community_id']].append({
+                'id': cwc['course__course_id'],
+                'member_ratio': cwc['member_ratio']
+            })
+
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             future_to_community = {
-                executor.submit(self.evaluate_similarity, community): community
+                executor.submit(self.evaluate_similarity, community,
+                                completed_courses_mapping, wish_courses_mapping): community
                 for community in self.communities
             }
 
