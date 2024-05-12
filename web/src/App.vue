@@ -7,6 +7,7 @@
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/js/bootstrap';
 import NavBar from './components/NavBar';
+import 'echarts';
 
 export default {
   name: "App",

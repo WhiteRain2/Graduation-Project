@@ -5,11 +5,12 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from demo.views.getInformation.get_course import get_course_info
+from demo.views.getInformation.get_course import get_course_info, search_courses
 
 urlpatterns = [
     path('getinfo/', GetInfoView.as_view(), name='getinfo'),
-    path('courses/<int:course_id>/', get_course_info, name='get_course_info'),
+    path('courses/', get_course_info, name='get_course_info'),
+    path('search-courses/', search_courses, name='search_courses'),
     path('getrecommend/', recommend_communities, name='recommend_communities'),
     path('operation/', operation, name='operation'),
 

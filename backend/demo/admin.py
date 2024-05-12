@@ -11,9 +11,6 @@ from .models.message import Message
 from .models.homo_student_similarity import HomoStudentSimilarity
 from django.utils.html import format_html
 
-# demo/admin.py
-# ...省略了其他导入...
-
 
 # 自定义HomoStudentSimilarity模型的admin显示
 class HomoStudentSimilarityAdmin(admin.ModelAdmin):
@@ -106,7 +103,7 @@ class CommunityAdmin(admin.ModelAdmin):
 
 # 自定义课程模型的admin显示
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ('course_id', 'name', 'chapter_count', 'task_count', 'description')
+    list_display = ('course_id', 'name', 'photo', 'teachers', 'created_time', 'chapter_count', 'task_count', 'description')
     search_fields = ('name', 'description')
     list_filter = ('chapters__status', 'tasks__status')
 

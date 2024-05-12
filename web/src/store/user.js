@@ -62,6 +62,9 @@ const ModuleUser = {
     },
     updateIsrecommending(state, b) {
       state.is_recommending = b
+    },
+    updateWishCourses(state, wish_cours) {
+      state.wishCourses.push(wish_cours);
     }
   },
   actions: {

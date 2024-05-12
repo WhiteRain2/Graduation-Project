@@ -4,8 +4,11 @@ from django.db import models
 
 class Course(models.Model):
     course_id = models.IntegerField(primary_key=True)
+    photo = models.CharField(max_length=2000, default='https://cdn.classpoint.io/wp-content/uploads/What-is-Personalized-Learning-2048x1280.webp')
     name = models.CharField(max_length=200)
     description = models.TextField()
+    teachers = models.CharField(max_length=200, default='任课教师1;任课教师2')
+    created_time = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return str(self.course_id) + self.name

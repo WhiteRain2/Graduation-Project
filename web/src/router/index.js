@@ -8,6 +8,7 @@ import NotFoundView from '../views/NotFoundView';
 import store from '@/store';
 import UserProfileView from '../views/UserProfileView';
 import CourseDetailView from '@/views/CourseDetailView.vue'
+import VisualizationView from '@/views/VisualizationView.vue';
 
 const routes = [
   {
@@ -51,6 +52,12 @@ const routes = [
     path: '/courses/:course_id',
     name: 'CourseDetail',
     component: CourseDetailView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/vis',
+    name: 'vis',
+    component: VisualizationView,
     meta: { requiresAuth: true }
   },
   {
