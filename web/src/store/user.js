@@ -118,7 +118,7 @@ const ModuleUser = {
         }
       } catch (error) {
         console.error('Fetch User Error:', error);
-        // Handle additional error, like redirecting to the login page
+        router.push({name: 'login'});
       }
     },
     async login({ commit }, data) {
@@ -204,11 +204,7 @@ const ModuleUser = {
           id: id,
           access: accessToken,
           refresh: refreshToken,
-          // 不要在这里设置 is_login: true
         });
-    
-        // 再次调用 fetchUser 来获取完整用户信息
-        // 你可以考虑给 fetchUser 传递 accessToken，或是在 fetchUser 内部直接使用 state 中的 access 令牌
         dispatch('fetchUser').then(() => {
           // 用户信息获取成功后，跳转到home页面
           console.log('Login!')
@@ -216,10 +212,12 @@ const ModuleUser = {
           console.error('Error fetching user on restore:', error);
           // 错误处理，例如如果令牌失效，则需要清除本地存储并注销用户
           dispatch('logout');
+          router.push({name: 'login'});
         });
   
       } else {
         commit('logout'); // 如果没有令牌或令牌失效，则执行登出操作
+        router.push({name: 'login'});
       }
     }, 
     async fetchRecommendations({ commit, state }, { student_id, course_id }) {
@@ -229,7 +227,6 @@ const ModuleUser = {
           course_id
         });
     
-        // 如果响应状态不是 200，则抛出错误。
         if (response.status !== 200) {
           throw new Error('Failed to fetch recommendations');
         }
@@ -245,7 +242,8 @@ const ModuleUser = {
         // 标记每个推荐共同体是否已被添加到用户的共同体列表中。
         recommendedCommunities = recommendedCommunities.map(community => ({
           ...community,
-          joined: state.communities.some(c => c.id === community.id)
+          joined: state.communities.some(c => c.id === community.id),
+          is_a_person: community.members_count === 1
         }));
     
         // 更新 Vuex 状态。
@@ -272,7 +270,7 @@ const ModuleUser = {
           // 更新推荐的共同体
           let updatedCommunities = state.recommendedCommunities.map(community => ({
             ...community,
-            joined: community.id === community_id ? operation === 'join' : community.joined
+            joined: community.id === community_id ? operation === 'join' : community.joined,
           }));
           commit('updateRecommendedCommunities', updatedCommunities);
         }

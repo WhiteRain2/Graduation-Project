@@ -5,7 +5,7 @@
       <div class="col">
         <div class="card">
           <div class="card-header">
-            你加入的社区
+            你加入的共同体
           </div>
           <div class="card-body">
             <table class="table table-hover">
@@ -25,6 +25,9 @@
                   <td class="text-center">{{ community.description }}</td>
                   <td class="text-center">{{ community.count }}</td>
                   <td class="text-center">
+                    <button type="button" class="btn btn-outline-info me-2"
+                      @click="goToCommunityDetail(community.id)">查看
+                    </button>
                     <button type="button" class="btn btn-outline-secondary me-2" @click="handleViewCommunity(community.id)">聊天</button>
                     <button type="button" class="btn btn-outline-danger"
                       @click="handleJoinOrLeaveCommunity(community.id, 'leave')"
@@ -56,9 +59,10 @@ import ChatMessages from '@/components/ChatMessages.vue'
 import ModalContext from '@/components/ModalContext.vue'
 import { computed, ref } from 'vue';
 import { useStore } from 'vuex';
+import router from '@/router/index';
 
 export default {
-  name: 'HomeView',
+  name: 'CommunityList',
   components: {
     ContentBase,
     ChatMessages,
@@ -78,6 +82,10 @@ export default {
     // 控制聊天框显示的reactive property
     const isChatModalVisible = ref(false);
     const selectedCommunityId = ref(null); // 新增一个变量用于存储当前选中的社区ID
+
+    const goToCommunityDetail = (communityId) => {
+      router.push({ name: 'vis', params: { community_id: communityId } });
+    }
 
     function handleViewCommunity(communityId) {
       selectedCommunityId.value = communityId;
@@ -111,8 +119,8 @@ export default {
       selectedCommunityId,
       handleJoinOrLeaveCommunity,
       handleViewCommunity,
-      handleCloseChatModal
-      // ... 其余返回对象内容...
+      handleCloseChatModal,
+      goToCommunityDetail
     }
   }
 };

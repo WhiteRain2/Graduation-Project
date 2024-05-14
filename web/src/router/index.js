@@ -55,7 +55,7 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/vis',
+    path: '/vis/:community_id',
     name: 'vis',
     component: VisualizationView,
     meta: { requiresAuth: true }
@@ -83,11 +83,9 @@ router.beforeEach((to, from, next) => {
   
   if (to.meta.requiresAuth && !isLoggedIn) {
     // 如果访问的路由需要授权但用户未登录，重定向到登录页
-    console.log('NO');
     next({ name: 'login' });
   } else {
     // 否则，继续当前的导航
-    console.log('LOGIN!');
     next();
   }
 });

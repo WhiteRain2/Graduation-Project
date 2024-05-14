@@ -87,37 +87,81 @@
                 <br>
                 <span>稍等一会...</span>
               </div>
+
               <div class="card-body" v-else>
-                <table class="table table-hover">
-                  <thead>
-                    <tr>
-                      <th scope="col" class="text-center">小组ID</th>
-                      <th scope="col" class="text-center">小组名称</th>
-                      <th scope="col" class="text-center">描述</th>
-                      <th scope="col" class="text-center">匹配度</th>
-                      <th scope="col" class="text-center">操作</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="community in recommendedCommunities" :key="community.id">
-                      <td class="text-center">{{ community.id }}</td>
-                      <td class="text-center">{{ community.name }}</td>
-                      <td class="text-center">{{ community.description }}</td>
-                      <td class="text-center">
-                        {{ typeof community.similarity === 'number' ? community.similarity.toFixed(2) : '' }} -- {{ typeof community.com_sim === 'number' ? community.com_sim.toFixed(2) : '' }} + {{ typeof community.std_sim === 'number' ? community.std_sim.toFixed(2) : '' }}
-                      </td>
-                      <td class="text-center">
-                        <button type="button" class="btn btn-outline-secondary me-2">查看</button>
-                        <button type="button" class="btn btn-outline-secondary"
-                          @click="handleJoinOrLeaveCommunity(community.id, community.joined ? 'leave' : 'join')"
-                          :disabled="community.joined"
-                        >
-                          {{ community.joined ? '已加入' : '加入' }}
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                <!-- 共同体列表 -->
+                <div class="card" v-if="r_communities.length">
+                  <div class="card-header">你可以加入他们...</div>
+                  <div class="card-body">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th scope="col" class="text-center">小组ID</th>
+                          <th scope="col" class="text-center">小组名称</th>
+                          <th scope="col" class="text-center">小组人数</th>
+                          <th scope="col" class="text-center">匹配度</th>
+                          <th scope="col" class="text-center">操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="community in r_communities" :key="community.id">
+                          <td class="text-center">{{ community.id }}</td>
+                          <td class="text-center">{{ community.name }}</td>
+                          <td class="text-center">{{ community.members_count }}</td>
+                          <td class="text-center">
+                            {{ typeof community.similarity === 'number' ? community.similarity.toFixed(2) : '' }}
+                          </td>
+                          <td class="text-center">
+                            <button type="button" class="btn btn-outline-secondary me-2"
+                              @click="goToCommunityDetail(community.id)">查看信息</button>
+                            <button type="button" class="btn btn-outline-secondary"
+                              @click="handleJoinOrLeaveCommunity(community.id, community.joined ? 'leave' : 'join')"
+                              :disabled="community.joined"
+                            >
+                              {{ community.joined ? '已加入' : '加入小组' }}
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <br>
+                <!-- 个人列表 -->
+                <div class="card" v-if="r_person.length">
+                  <div class="card-header">或者和Ta一起学...</div>
+                  <div class="card-body">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th scope="col" class="text-center">ID</th>
+                          <th scope="col" class="text-center">姓名</th>
+                          <th scope="col" class="text-center">性别</th>
+                          <th scope="col" class="text-center">已学/正在学</th>
+                          <th scope="col" class="text-center">相似度</th>
+                          <th scope="col" class="text-center">操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="person in r_person" :key="person.members.id">
+                          <td class="text-center">{{ person.members.id }}</td>
+                          <td class="text-center">{{ person.members.name }}</td>
+                          <td class="text-center">{{ person.members.gender }}</td>
+                          <td class="text-center">{{ person.members.completed_count }} / {{ person.members.wish_count }}</td>
+                          <td class="text-center">
+                            {{ typeof person.similarity === 'number' ? person.similarity.toFixed(2) : '' }}
+                          </td>
+                          <td class="text-center">
+                            <button type="button" class="btn btn-outline-secondary me-2" @click="goToStudentDetail(person.members.id)">查看信息</button>
+                            <button type="button" class="btn btn-outline-secondary" @click="handleJoinOrLeaveCommunity(person.id, person.joined ? 'leave' : 'join')" :disabled="person.joined">
+                              {{ person.joined ? '快去聊天吧' : '组成小组' }}
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -176,6 +220,7 @@ import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import ChatMessages from '@/components/ChatMessages.vue'
 import ModalContext from '@/components/ModalContext.vue'
+import router from '@/router/index';
 
 export default {
   name: 'CourseDetail',
@@ -193,8 +238,22 @@ export default {
     const showChatMenu = ref(false);
     const communities = computed(() => store.state.user.communities); 
     const studentId = computed(() => store.state.user.id);
-    const recommendedCommunities = computed(() => store.state.user.recommendedCommunities);
     const is_recommending = computed(() => store.state.user.is_recommending);
+    const recommendedCommunities = computed(() => store.state.user.recommendedCommunities);
+    const r_communities = computed(() => recommendedCommunities.value.filter(community => !community.is_a_person));
+    const r_person = computed(() => 
+      recommendedCommunities.value
+        .filter(community => community.is_a_person)
+        .map(community => ({ ...community, members: community.members[0] }) )
+    );
+
+    const goToCommunityDetail = (communityId) => {
+      router.push({ name: 'vis', params: { community_id: communityId } });
+    }
+    const goToStudentDetail = (studentId) => {
+      router.push({name: 'userprofile', params: { userId: studentId }});
+    }
+
     // 异步加载课程详情数据
     const loadCourseDetails = async () => {
       try {
@@ -294,7 +353,6 @@ export default {
         name: course.value.name
       });
       store.commit('user/updateIsrecommending', true);
-      window.location.hash = 'recommendations';
       try {
         // 直接调用store的dispatch函数来触发一个action
         await store.dispatch('user/fetchRecommendations', {
@@ -308,7 +366,8 @@ export default {
         alert(error.message);
       } finally {
         store.commit('user/updateIsrecommending', false); // 无论成功还是失败，结束加载状态
-      }
+        console.log(recommendedCommunities);
+      }      
     };
 
     const handleJoinOrLeaveCommunity = async (community_id, operation) => {
@@ -341,9 +400,13 @@ export default {
       handleViewCommunity,
       handleCloseChatModal,
       recommendedCommunities,
+      r_communities,
+      r_person,
       handleFetchRecommendations,
       is_recommending,
-      handleJoinOrLeaveCommunity
+      handleJoinOrLeaveCommunity,
+      goToCommunityDetail,
+      goToStudentDetail
     };
   }
 };
@@ -365,48 +428,52 @@ export default {
     padding: 0;
   }
 
-/* 聊天室图标及下拉菜单样式 */
-.chat-icon-wrapper {
-  position: fixed; /* 固定位置，不随页面滚动改变 */
-  bottom: 40px;    /* 离底部20px */
-  right: 40px;     /* 离右边20px */
-  z-index: 1050;   /* 层叠顺序设置得略高，以确保能覆盖大多数元素 */
-}
-
-.chat-icon svg {
-  width: 40px; /* 或其他适合的尺寸 */
-  height: 40px; /* 或其他适合的尺寸 */
-}
-
-.chat-icon {
+  .cursor-pointer {
   cursor: pointer;
-  /* 可以根据需要添加其他样式，如背景色、边框等 */
-}
+  }
 
-.chat-menu {
-  display: block;
-  position: absolute;
-  bottom: 100%; /* 使下拉菜单显示在图标上方 */
-  right: 0;
-  width: 500px; /* 扩大下拉菜单的宽度 */
-  background-color: #fff; /* 添加纯色背景板 */
-  border: 1px solid #ddd; /* 添加边框 */
-  box-shadow: 0 2px 5px rgba(0,0,0,.2); /* 添加轻微的阴影，增加立体感 */
-  border-radius: .25rem; /* 轻微的圆角 */
-  overflow: hidden; /* 防止子元素溢出 */
-}
+  /* 聊天室图标及下拉菜单样式 */
+  .chat-icon-wrapper {
+    position: fixed; /* 固定位置，不随页面滚动改变 */
+    bottom: 40px;    /* 离底部20px */
+    right: 40px;     /* 离右边20px */
+    z-index: 1050;   /* 层叠顺序设置得略高，以确保能覆盖大多数元素 */
+  }
 
-.chat-room {
-  padding: .5rem 1rem; /* 聊天室信息的内边距 */
-  border-bottom: 1px solid #ddd; /* 聊天室之间的分隔线 */
-}
+  .chat-icon svg {
+    width: 40px; /* 或其他适合的尺寸 */
+    height: 40px; /* 或其他适合的尺寸 */
+  }
 
-.chat-room:last-child {
-  border-bottom: none; /* 最后一个聊天室不显示分隔线 */
-}
+  .chat-icon {
+    cursor: pointer;
+    /* 可以根据需要添加其他样式，如背景色、边框等 */
+  }
 
-/* 添加悬停效果 */
-.chat-room:hover {
-  background-color: #f8f9fa;
-}
+  .chat-menu {
+    display: block;
+    position: absolute;
+    bottom: 100%; /* 使下拉菜单显示在图标上方 */
+    right: 0;
+    width: 500px; /* 扩大下拉菜单的宽度 */
+    background-color: #fff; /* 添加纯色背景板 */
+    border: 1px solid #ddd; /* 添加边框 */
+    box-shadow: 0 2px 5px rgba(0,0,0,.2); /* 添加轻微的阴影，增加立体感 */
+    border-radius: .25rem; /* 轻微的圆角 */
+    overflow: hidden; /* 防止子元素溢出 */
+  }
+
+  .chat-room {
+    padding: .5rem 1rem; /* 聊天室信息的内边距 */
+    border-bottom: 1px solid #ddd; /* 聊天室之间的分隔线 */
+  }
+
+  .chat-room:last-child {
+    border-bottom: none; /* 最后一个聊天室不显示分隔线 */
+  }
+
+  /* 添加悬停效果 */
+  .chat-room:hover {
+    background-color: #f8f9fa;
+  }
 </style>

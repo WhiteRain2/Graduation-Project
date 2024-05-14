@@ -12,7 +12,7 @@
 
 <script>
 export default {
-    name: "ContentBase",
+  name: "ContentBase",
 }
 </script>
 

@@ -46,7 +46,18 @@ def recommend_communities(request):
             'description': community.description,
             'similarity': sim[0],
             'com_sim': sim[1],
-            'std_sim': sim[2]
+            'std_sim': sim[2],
+            'members_count': community.members.count(),
+            'members': [{
+                'id': student.student_id,
+                'name': student.name,
+                'gender': student.get_gender_display(),
+                'learning_style': student.get_learning_style_display(),
+                'completed_count': student.completed_courses.count(),
+                'wish_count': student.wish_courses.count(),
+                'self_description': student.self_description
+                } for student in community.members.all()
+            ]
         } for sim, community in recommended_communities
     ]
     return JsonResponse(community_list, safe=False)

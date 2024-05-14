@@ -2,9 +2,10 @@
 from django.db.models import Count
 from rest_framework import views, permissions, response
 from django.core.exceptions import ObjectDoesNotExist  # 如果你使用的是自定义异常处理
-from demo.models import Community
+from demo.models import Community, Student
 from demo.repositories.community_repository import CommunityRepository
 from demo.repositories.student_repository import StudentRepository
+from demo.models.relations import CommunityCompletedCourse, CommunityWishCourse
 
 
 class GetInfoView(views.APIView):
@@ -24,11 +25,21 @@ class GetInfoView(views.APIView):
                         for student in community.members.all()]
         # 获取已完成的课程
         completed_courses_json = [{'id': cc.course.course_id, 'name': cc.course.name, 'member_ratio': cc.member_ratio}
-                                  for cc in community.completedcourse_set.all()]
+                                  for cc in CommunityCompletedCourse.objects.filter(community=community)]
 
         # 获取愿望课程
         wish_courses_json = [{'id': wc.course.course_id, 'name': wc.course.name, 'member_ratio': wc.member_ratio}
-                             for wc in community.wishcourse_set.all()]
+                             for wc in CommunityWishCourse.objects.filter(community=community)]
+
+        gender_detail = community.members.values('gender').annotate(count=Count('gender'))  # 统计每个性别的成员数量
+        learning_style_detail = community.members.values('learning_style').annotate(
+            count=Count('learning_style'))  # 统计每种学习风格的成员数量
+        active_members_count = community.members.filter(activity_level__gt=0.5).count()  # 统计活跃度大于0.5的成员数
+
+        gender_detail_json = {dict(Student.GENDER_CHOICES)[gender['gender']]: gender['count'] for gender in
+                              gender_detail}
+        learning_style_detail_json = {dict(Student.LEARNING_STYLE_CHOICES)[ls['learning_style']]: ls['count'] for ls in
+                                      learning_style_detail}
 
         return {
             'id': community.id,
@@ -41,6 +52,9 @@ class GetInfoView(views.APIView):
             'members': members_json,
             'completed_courses': completed_courses_json,
             'wish_courses': wish_courses_json,
+            'gender_details': gender_detail_json,
+            'learning_style_details': learning_style_detail_json,
+            'active_members_count': active_members_count,
         }
 
     def get_student_info(self, student):

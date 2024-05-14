@@ -110,7 +110,7 @@ class CommunityRecommender:
 
     def evaluate_similarity(self, community, completed_courses_mapping, wish_courses_mapping):
         c = self.evaluate_course_similarity(community, completed_courses_mapping, wish_courses_mapping)
-        s = self.evaluate_student_similarity(community)
+        s = max(self.evaluate_student_similarity(community), 0)
         return 0.4 * c + 0.6 * s, c, s
 
     def recommend_communities(self):
@@ -155,4 +155,5 @@ class CommunityRecommender:
                     print(f'Community {community.id} generated an exception: {exc}')
 
         recommended_communities.sort(key=lambda x: x[0][0], reverse=True)
+        print(recommended_communities)
         return recommended_communities[:self.max_communities]
