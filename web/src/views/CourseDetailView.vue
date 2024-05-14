@@ -5,7 +5,7 @@
         <div class="card-header">{{ course.name }}</div>
         <div class="card-body d-flex">
           <!-- 图片占据左侧固定最大宽度 -->
-          <img decoding="async" :src="course.photo" alt="图片暂时无法显示！" class="img-fluid me-3" style="max-width: 600px; height: auto;">
+          <img decoding="async" :src="course.photo" alt="图片暂时无法显示！" class="img-fluid me-3" style="max-width: 50%; height: auto;">
           <!-- 由于使用了d-flex，右侧内容现通过flex-grow控制宽度 -->
           <div class="d-flex flex-column justify-content-center ms-auto pe-3 flex-grow-1">
             <h5 class="mb-4">课程名: {{ course.name }}</h5>

@@ -1,7 +1,7 @@
 <template>
   <ContentBase>
     <div class="row justify-content-md-center">
-      <div class="col-3">
+      <div class="col-12 col-md-3">
         <form @submit.prevent="login">
           <div class="mb-3">
             <label for="username" class="form-label">用户名</label>
