@@ -9,7 +9,7 @@ from demo.repositories.community_repository import CommunityRepository
 
 class StudentRepository:
     @staticmethod
-    def create_student(student_id, name):
+    def create_student(student_id, name, gender):
         """
         创建新的学生记录。
         :param student_id: 学生的唯一标识符
@@ -19,7 +19,7 @@ class StudentRepository:
             raise ValidationError(f"Student with id {student_id} already exists.")
 
         # 创建 Student 实例并保存到数据库
-        student = Student(student_id=student_id, name=name)
+        student = Student(student_id=student_id, name=name, gender=gender)
         student.save()
         return student
 
@@ -55,7 +55,11 @@ class StudentRepository:
             try:
                 community = CommunityRepository.get_community_by_id(community_id)
             except Community.DoesNotExist:
-                raise ValidationError(f"Community with id {community_id} does not exist.")
+                if not StudentRepository.get_student_by_id(community_id):
+                    raise ValidationError(f"Not Exist.")
+                community = CommunityRepository.create_community('学习小组')
+                CommunityRepository.add_member_to_community(community.id, student_id)
+                CommunityRepository.add_member_to_community(community.id, community_id)
             if student in community.members.all():
                 raise ValidationError(f"Student with id {student_id} has already joined the community.")
             # 调用 CommunityRepository 的方法将学生添加到共同体
@@ -70,31 +74,6 @@ class StudentRepository:
             raise ValidationError(f"Student with id {student_id} does not have members.")
 
         CommunityRepository.remove_member_from_community(community_id, student_id)
-
-
-    # @staticmethod
-    # def add_wish_course(student_id, course_id):
-    #     """
-    #     为学生添加愿望课程，并且更新相关的共同体愿望课程列表。
-    #     """
-    #     with transaction.atomic():
-    #         student = StudentRepository.get_student_by_id(student_id)
-    #
-    #         # 确认愿望课程不是学生已完成的课程
-    #         if student.completed_courses.filter(pk=course_id).exists():
-    #             raise ValueError("Course Completed")
-    #         if student.wish_courses.filter(pk=course_id).exists():
-    #             return
-    #         # 添加愿望课程到学生
-    #         if student.wish_courses.count() >= Student.MAX_WISH_COURSES:
-    #             oldest_wish_course = student.wish_courses.order_by('timestamp').first()
-    #             oldest_wish_course.delete()
-    #
-    #         WishCourse.objects.create(student=student, course_id=course_id)
-    #
-    #         # 检查并更新共同体的愿望课程列表
-    #         for community in student.communities.all():
-    #             community.update_courses()
 
     @staticmethod
     def add_wish_course(student_id, course_id):

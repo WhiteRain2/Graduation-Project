@@ -70,7 +70,27 @@
         text: config.title,
         padding: 20
       },
-      tooltip: {},
+      tooltip: {
+        formatter: function (params) {
+          let res = params.name + '<br/>';
+          params.value.forEach((val, i) => {
+            // 检查 val 是否为数字
+            if (typeof val === 'number') {
+              // 检查 val 是否为整数
+              if (Number.isInteger(val)) {
+                res += config.indicators[i].name + ' : ' + val + '<br/>';
+              } else {
+                // 如果是小数，则保留两位小数
+                res += config.indicators[i].name + ' : ' + val.toFixed(2) + '<br/>';
+              }
+            } else {
+              // 如果 val 不是数字，则直接输出
+              res += config.indicators[i].name + ' : ' + val + '<br/>';
+            }
+          });
+          return res;
+        }
+      },
       // legend: {
       //   data: config.data.map(item => item.name),
       // },

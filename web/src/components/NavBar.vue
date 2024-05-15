@@ -26,7 +26,11 @@
         </li>
       </ul>
       <ul class="navbar-nav" v-else>
-        <li class="nav-item">
+        <li class="nav-item d-flex align-items-center">
+          <router-link class="nav-link" :to="{name: 'notifications'}">
+            <i class="bi bi-bell me-1"></i>
+            <!-- <span class="notification-badge"></span> -->
+          </router-link>
           <router-link
             class="nav-link" 
             :to="{name: 'userprofile', params: {userId: $store.state.user.id}}"
@@ -63,5 +67,15 @@ export default {
 </script>
 
 <style scoped>
-
+.notification-badge {
+  /* position: absolute; */
+  top: 32%;
+  right: 19%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: red;
+  /* 调整位置，视情况而定 */
+  transform: translate(60%, -50%);
+}
 </style>

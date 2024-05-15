@@ -49,7 +49,7 @@
   .modal-content {
     position: relative; /* 相对定位，用于定位关闭按钮 */
     display: block; /* 默认显示 */
-    width: 75%; /* 75% 的宽度 */
+    width: 60%; /* 75% 的宽度 */
     height: 75%; /* 75% 的高度 */
     background-color: #fff; /* 白色背景 */
     padding: 20px;

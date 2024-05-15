@@ -98,6 +98,7 @@ def regis(request):
     data = json.loads(request.body.decode('utf-8'))
     username = data.get("username")
     password = data.get("password")
+    gender = data.get('gender')
     email = data.get("email")
 
     if not all([username, password, email]):
@@ -117,7 +118,7 @@ def regis(request):
 
     # 使用当前时间戳作为学生 ID
     student_id = int(timezone.now().timestamp())
-    student = StudentRepository.create_student(student_id, username)
+    student = StudentRepository.create_student(student_id, username, gender)
 
     student_profile = StudentProfile(user=user, student=student)
     student_profile.save()

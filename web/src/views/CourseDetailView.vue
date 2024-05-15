@@ -12,7 +12,13 @@
             <p class="mb-4">主讲人：{{ course.teachers }}</p>
             <p class="mb-4">开课时间: {{ formattedCreateTime }}</p>
             <button v-if="isNewCourse" type="button" class="btn btn-outline-success" @click="handleFetchRecommendations">加入学习</button>
-            <button v-else type="button" class="btn btn-outline-success" @click="handleFetchRecommendations">继续学习</button>
+            <!-- 当 isNewCourse 为 false 时，显示两个并列的按钮 -->
+            <div class="row" v-else>
+              <!-- '继续学习' 按钮，默认是不可以点击的(disabled) -->
+              <button type="button" class="btn btn-outline-success col-5 me-2 ms-1" disabled>继续学习</button>
+              <!-- '寻找伙伴' 按钮，绑定 handleFetchRecommendations 方法 -->
+              <button type="button" class="btn btn-outline-success col-5" @click="handleFetchRecommendations">寻找伙伴</button>
+            </div>
           </div>
         </div>
         <div class="card-footer text-end text-muted small">已有{{ course.total_count }}人正在学习ing...</div>
@@ -215,7 +221,7 @@
 <script>
 import ContentBase from '@/components/ContentBase';
 import axios from 'axios';
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import ChatMessages from '@/components/ChatMessages.vue'
@@ -353,6 +359,13 @@ export default {
         name: course.value.name
       });
       store.commit('user/updateIsrecommending', true);
+        // 立刻滚动到 recommendations 部分显示加载动画
+      nextTick().then(() => {
+        const recommendationsEl = document.getElementById('recommendations');
+        if (recommendationsEl) {
+          recommendationsEl.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
       try {
         // 直接调用store的dispatch函数来触发一个action
         await store.dispatch('user/fetchRecommendations', {

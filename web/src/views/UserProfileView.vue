@@ -116,6 +116,10 @@
             </div>
           </div>
         </div>
+        <div class="row" v-if="!isMe">
+          <button type="button" class="btn btn-outline-success col-lg-5 mb-2 mx-auto"
+          @click="$router.go(-1)">返回前页</button>
+        </div>
       </div>
     </div>
     <div v-else class="text-center my-5">

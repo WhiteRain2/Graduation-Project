@@ -8,6 +8,14 @@
             <input v-model="username" type="text" class="form-control" id="username">
           </div>
           <div class="mb-3">
+            <label for="gender" class="form-label">性别</label>
+            <select v-model="gender" class="form-control" id="gender">
+              <option value="">请选择</option>
+              <option value="1">男</option>
+              <option value="0">女</option>
+            </select>
+          </div>
+          <div class="mb-3">
             <label for="password" class="form-label">密码</label>
             <input v-model="password" type="password" class="form-control" id="password">
           </div>
@@ -44,6 +52,7 @@ export default {
     let password_confirm = ref('');
     let email = ref('')
     let error_message = ref('');
+    let gender = ref('');
     
     const register = async () => {
       // 校验前端输入的数据是否合法
@@ -56,12 +65,13 @@ export default {
         error_message.value = "两次输入的密码不一致。";
         return;
       }
-
+      
       try {
         // 发送POST请求到服务器注册新用户
         const response = await axios.post('http://localhost:8000/register/', {
           username: username.value,
           password: password.value,
+          gender: gender.value,
           email: email.value
         });
 
@@ -82,6 +92,7 @@ export default {
 
     return {
       username,
+      gender,
       password,
       password_confirm,
       error_message,

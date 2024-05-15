@@ -10,9 +10,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 class CommunityRecommender:
-    LOW_ENTER_THRESHOLD = 0.05  # 准入阈值
+    LOW_ENTER_THRESHOLD = 0.04  # 准入阈值
 
-    def __init__(self, student_id, current_wish_course_id, max_communities=10, max_workers=4):
+    def __init__(self, student_id, current_wish_course_id, max_communities=15, max_workers=4):
         self.student_id = student_id
         self.current_wish_course_id = current_wish_course_id
         self.max_communities = max_communities
@@ -150,10 +150,16 @@ class CommunityRecommender:
                 try:
                     similarity_score = future.result()
                     if similarity_score[0] > self.LOW_ENTER_THRESHOLD:
+                        if community.members.count() > 1:
+                            new_sim = (similarity_score[0]+1, similarity_score[1], similarity_score[2])
+                            similarity_score = new_sim
                         recommended_communities.append((similarity_score, community))
                 except Exception as exc:
                     print(f'Community {community.id} generated an exception: {exc}')
 
         recommended_communities.sort(key=lambda x: x[0][0], reverse=True)
-        print(recommended_communities)
+        for idx, recommended_community in enumerate(recommended_communities[:self.max_communities]):
+            if recommended_community[1].members.count() > 1:
+                adjusted_score = (recommended_community[0][0] - 1,) + recommended_community[0][1:]
+                recommended_communities[idx] = (adjusted_score, recommended_community[1])
         return recommended_communities[:self.max_communities]

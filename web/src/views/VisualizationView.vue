@@ -51,12 +51,24 @@
             </div>
           </div>
         </div>
-        <div class="row">
-          <button v-if="isNew" type="button" class="btn btn-outline-success col-lg-5 mb-2 mx-auto">加入共同体</button>
-          <button v-else type="button" class="btn btn-outline-danger col-lg-5 mb-2 mx-auto">退出共同体</button> <!-- 编写退出共同体的按钮逻辑 -->
-          <button type="button" class="btn btn-outline-success col-lg-5 mb-2 mx-auto">返回前页</button>
+      </div>
+      <div class="card">
+        <div class="card-header">成员情况概览</div>
+        <div class="card-body">
+          <div v-for="student in students" :key="student.id" class="mb-2">
+            <VisPerson :student_id="student.id"></VisPerson>
+          </div>
         </div>
       </div>
+    </div>
+    <br>
+    <div class="row">
+      <button v-if="isNew" type="button" class="btn btn-outline-success col-lg-5 mb-2 mx-auto"
+       @click="handleJoinOrLeaveCommunity('join')">加入共同体</button>
+      <button v-else type="button" class="btn btn-outline-danger col-lg-5 mb-2 mx-auto"
+       @click="handleJoinOrLeaveCommunity('leave')">退出共同体</button> <!-- 编写退出共同体的按钮逻辑 -->
+      <button type="button" class="btn btn-outline-success col-lg-5 mb-2 mx-auto"
+       @click="$router.go(-1)">返回前页</button>
     </div>
   </ContentBase>
 </template>
@@ -65,6 +77,7 @@
 import ContentBase from '../components/ContentBase';
 import RadarChart from '@/components/RadarChart.vue';
 import PieChart from '@/components/PieChart.vue';
+import VisPerson from '@/components/VisPerson.vue';
 import { onMounted, ref, computed } from 'vue';
 import { useStore } from 'vuex';
 import { useRoute } from 'vue-router';
@@ -75,7 +88,8 @@ export default {
   components: {
     ContentBase,
     RadarChart,
-    PieChart
+    PieChart,
+    VisPerson
   },
   setup() {
     const store = useStore();
@@ -84,6 +98,7 @@ export default {
     const gender_chart_config = ref();
     const learning_style_chart_config = ref();
     const activity_level_chart_config = ref();
+    const students = ref([]);
     const communities = computed(() => store.state.user.communities);
     const community_chart_config = ref({
       title: '',
@@ -98,9 +113,8 @@ export default {
       ],
     });
     const isNew = computed(() => {
-      console.log(communities.value);
       if (!communities.value) return false;
-      return !communities.value.some(community => community.id === route.params.community_id);
+      return !communities.value.some(community => Number(community.id) === Number(community_id));
     });
     onMounted(async () => {
       if (store.state.user.is_login && community_id) {
@@ -153,6 +167,7 @@ export default {
               ],
             };
 
+            students.value = data.members;
           }
         } catch (error) {
           console.error('Error fetching community data:', error);
@@ -163,12 +178,27 @@ export default {
       }
     });
 
+        // ...其余方法和逻辑...
+    const handleJoinOrLeaveCommunity = async (operation) => {
+      try {
+        await store.dispatch('user/joinOrLeaveCommunity', {
+          student_id: store.state.user.id,
+          community_id: community_id,
+          operation
+        });
+      } catch (error) {
+        alert(error.message);
+      }
+    };
+
     return {
       community_chart_config,
       gender_chart_config,
       learning_style_chart_config,
       activity_level_chart_config,
-      isNew
+      isNew,
+      handleJoinOrLeaveCommunity,
+      students
     };
   },
 };
