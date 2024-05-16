@@ -86,7 +86,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             messages = Message.objects.filter(community__isnull=True).order_by('created_at')[:limit]
         else:
             # 根据 community_id 查询特定共同体的消息
-            messages = Message.objects.filter(community__id=self.community_id).order_by('-created_at')[:limit]
+            messages = Message.objects.filter(community__id=self.community_id).order_by('created_at')[:limit]
 
         # 我们需要序列化消息，因为异步方法不能直接返回复杂的数据类型
         return [{

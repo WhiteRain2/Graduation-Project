@@ -8,19 +8,24 @@
               用户基本资料
             </div>
             <div class="card-body">
-              <div class="row">
-                <div class="col-2">ID: {{ studentInfo.studentId }}</div>
-                <div class="col-2">姓名: {{ studentInfo.studentName }}</div>
-                <div class="col-2">性别: {{ studentInfo.gender }}</div>
-                <div class="col-3">学习风格: {{ studentInfo.learning_style }}</div>
-                <div class="col-3">
-                  活跃度:
-                  <span v-if="isMe">{{ typeof studentInfo.activity_level === 'number' ? studentInfo.activity_level.toFixed(2) : '' }}</span>
-                  <span v-else>
-                    <span v-if="studentInfo.activity_level>=0.5">活跃</span>
-                    <span v-else>一般</span>
-                  </span>
+              <div v-if="isMe">
+                <div class="row">
+                  <div class="col-2">ID: {{ studentInfo.studentId }}</div>
+                  <div class="col-2">姓名: {{ studentInfo.studentName }}</div>
+                  <div class="col-2">性别: {{ studentInfo.gender }}</div>
+                  <div class="col-3">学习风格: {{ studentInfo.learning_style }}</div>
+                  <div class="col-3">
+                    活跃度:
+                    <span v-if="isMe">{{ typeof studentInfo.activity_level === 'number' ? studentInfo.activity_level.toFixed(2) : '' }}</span>
+                    <span v-else>
+                      <span v-if="studentInfo.activity_level>=0.5">活跃</span>
+                      <span v-else>一般</span>
+                    </span>
+                  </div>
                 </div>
+              </div>
+              <div v-else>
+                <ShowStudent :friendId="studentInfo.studentId" />
               </div>
             </div>
           </div>
@@ -117,6 +122,10 @@
           </div>
         </div>
         <div class="row" v-if="!isMe">
+          <!-- <button v-if="isNew" type="button" class="btn btn-outline-success col-lg-5 mb-2 mx-auto"
+          @click="handleJoinOrLeaveCommunity('join')">组成小组</button>
+          <button v-else type="button" class="btn btn-outline-danger col-lg-5 mb-2 mx-auto"
+          @click="handleJoinOrLeaveCommunity('leave')">退出共同体</button> -->
           <button type="button" class="btn btn-outline-success col-lg-5 mb-2 mx-auto"
           @click="$router.go(-1)">返回前页</button>
         </div>
@@ -129,22 +138,30 @@
 </template>
 
 <script>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import ContentBase from '@/components/ContentBase.vue'; // 假设ContentBase组件存在于指定路径
+import ContentBase from '@/components/ContentBase.vue';
+import ShowStudent from '@/components/ShowStudent.vue';
 
 export default {
   name: 'UserProfile',
   components: {
     ContentBase,
+    ShowStudent
   },
   setup() {
     const store = useStore();
     const router = useRouter();
-    const userId = router.currentRoute.value.params.userId;    
+    const userId = router.currentRoute.value.params.userId;
+    const communityId = router.currentRoute.value.params.communityId;
     const isMe = ref(store.state.user.id === userId);
+    const communities = computed(() => store.state.user.communities);
+    const isNew = computed(() => {
+      if (!communities.value) return false;
+      return !communities.value.some(community => Number(community.id) === Number(communityId));
+    });
     console.log(isMe.value);
     // 使用ref创建响应式引用
     const studentInfo = ref({
@@ -198,13 +215,29 @@ export default {
       router.push({ name: 'vis', params: { community_id: communityId } });
     }
 
+    
+    const handleJoinOrLeaveCommunity = async (operation) => {
+      try {
+        await store.dispatch('user/joinOrLeaveCommunity', {
+          student_id: store.state.user.id,
+          community_id: communityId,
+          operation
+        });
+      } catch (error) {
+        alert(error.message);
+      }
+    };
+
+
 
     // 返回要在模板中使用的响应式数据和函数
     return {
       studentInfo,
       goToCourseDetail,
       goToCommunityDetail,
-      isMe
+      isMe,
+      handleJoinOrLeaveCommunity,
+      isNew
     };
   },
 };

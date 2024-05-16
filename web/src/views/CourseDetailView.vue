@@ -158,7 +158,7 @@
                             {{ typeof person.similarity === 'number' ? person.similarity.toFixed(2) : '' }}
                           </td>
                           <td class="text-center">
-                            <button type="button" class="btn btn-outline-secondary me-2" @click="goToStudentDetail(person.members.id)">查看信息</button>
+                            <button type="button" class="btn btn-outline-secondary me-2" @click="goToStudentDetail(person.members.id, person.id)">查看信息</button>
                             <button type="button" class="btn btn-outline-secondary" @click="handleJoinOrLeaveCommunity(person.id, person.joined ? 'leave' : 'join')" :disabled="person.joined">
                               {{ person.joined ? '快去聊天吧' : '组成小组' }}
                             </button>
@@ -256,8 +256,8 @@ export default {
     const goToCommunityDetail = (communityId) => {
       router.push({ name: 'vis', params: { community_id: communityId } });
     }
-    const goToStudentDetail = (studentId) => {
-      router.push({name: 'userprofile', params: { userId: studentId }});
+    const goToStudentDetail = (studentId, communityId) => {
+      router.push({name: 'userprofile', params: { userId: studentId, communityId: communityId }});
     }
 
     // 异步加载课程详情数据

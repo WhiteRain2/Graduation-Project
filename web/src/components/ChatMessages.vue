@@ -60,7 +60,6 @@ export default {
       const date = new Date(timestamp);
       const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
       // 检查消息日期是否是今天
-      // 检查消息日期是否是今天
       if (msgDate.getTime() === today.getTime()) {
        // 如果是今天，则只显示时间，且确保小时和分钟为两位数
        return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
