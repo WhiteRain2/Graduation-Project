@@ -150,16 +150,9 @@ class CommunityRecommender:
                 try:
                     similarity_score = future.result()
                     if similarity_score[0] > self.LOW_ENTER_THRESHOLD:
-                        if community.members.count() > 1:
-                            new_sim = (similarity_score[0]+1, similarity_score[1], similarity_score[2])
-                            similarity_score = new_sim
                         recommended_communities.append((similarity_score, community))
                 except Exception as exc:
                     print(f'Community {community.id} generated an exception: {exc}')
 
         recommended_communities.sort(key=lambda x: x[0][0], reverse=True)
-        for idx, recommended_community in enumerate(recommended_communities[:self.max_communities]):
-            if recommended_community[1].members.count() > 1:
-                adjusted_score = (recommended_community[0][0] - 1,) + recommended_community[0][1:]
-                recommended_communities[idx] = (adjusted_score, recommended_community[1])
         return recommended_communities[:self.max_communities]
